@@ -5,6 +5,7 @@ This is a simulator for a Mobile Edge Computing (MEC) environment with IoT devic
 
 This project comprises of a simulator I developed for my **master's degree** at Federal University of Rio Grande do Sul (Portuguese: Universidade Federal do Rio Grande do Sul, UFRGS). It's main objective is to measure the total energy consumed and total elapsed time when processing tasks, from creation to conclusion, from a particular application. The built in scheduler calculates the costs associated to each resource allocation option in the architecture and selects the lowest one to execute the task. The same goes for all the application's tasks.
 
+## 1.1 Processing sites
 There are three available resource allocation options in the system:
 * Local processing, in the Iot device: The scheduler can choose to keep the task in the IoT device and execute it locally, in it's own core.
 
@@ -12,21 +13,32 @@ There are three available resource allocation options in the system:
 
 * Remote processing, in the Cloud's Data Centers: Data Centers are distant-centrilized processing clusters with high procesisng capabilities and virtual infinite resources. It's and available offloading option, but may add a lot of latency to the IoT application.
 
+## 1.2 Types of tasks
+The system has two different types of tasks, critical tasks and non-critical tasks. The critical tasks have deadline stablished on their creation, with means that they have to finish execution before reaching the deadline, otherwise the task will be automatically cancelled. The non-critical tasks don't have a deadline, so they won't be cancelled if processing takes too long.
+
+## 1.3 Application and it's characteristics
+When running the simulator we have to choose an application first. The application has a set of characteristics that must be configured in the simulator por it's propor execution. The characteristcs we have to set are:
+
+* **Task generation rate**: Define how long will it take for tasks from the application to be created from one another.
+* **Data size entry**: Define the size of the data the task needs for processing. This data size has impact in the data transmissions across the system adding energy and time costs for the task, depending on the allocation option.
+* **Results size**: Define the size of the results a task delivers after finishing processing. For instance, if a task is allocated in a MEC server, it's results must be sent back to the origin, that is, the IoT device (user) that created the task.
+* **Computacional load**: It's assumed that the user creates cyclical tasks and knows the number of CPU cycles a task have. The computacional load is used mainly to calculed the time needed for execution. 
+* **Deadline**: Define the deadline for critical tasks. If a critical task is created, data transmissions (data entry and results) and processing must be lower than the deadline, otherwise the task will be cancelled.
+
+Below there are two examples of applications. Application 1 is considered of high processing cost, while Application 2 is considered of low processing cost.
+
+![Examples of applications](images/Applications.PNG)
+
+
 # 2 Architecture
 
 The three layer architecture uses two different communication technologies. The IoT device layer communicates with the MEC layer with 5G and the MEC layer communicates with the Cloud layer with fiber optics.
 
 ![Architecture of the system](images/architecture.png)
 
-The MEC servers are local servers placed close to the final user (IoT devices in this case) which provide lower latency when running tasks origined in those IoT devices, if compared to the Cloud latency. 
-
-Tasks are created in the IoT devices. If the scheduling algorithm devices to offload the task and execute it in a MEC server, then a 5G connecting is made, adding latency to the application. But if the task if offloaded to the Cloud, then a 5G connecting is made with the MEC server, which receives the tasks data and source code, and another connecting between the MEC server and the Cloud is made, finally sending the tasks data and source code to the Cloud. In this second case more latency is added to the application. When the task's executing is complete the results must be sent back to the IoT device (the user).
-
-Even with more latency added to the application when tasks run in the MEC server or in the Cloud, it could be a better choice then running locally in the IoT's device core, because the executing time could be very high in the user's device. 
+The MEC servers are local servers placed close to the final user (IoT devices in this case) which provide lower latency when running tasks origined in those IoT devices, if compared to the Cloud latency. Even with more latency added to the application when tasks run in the MEC server or in the Cloud, it could be a better choice then running locally in the IoT's device core, because the executing time could be very high in the user's device. 
 
 It is expected that the IoT devices move around the network, that's why a wireless connection is required between the bottom layer and the intermediate layer, so that offloading of data and task's source code can be performed.
-
-The IoT devices create tasks that must be assigned to run either in the IoT device itself, in a core from a MEC server or in a core from the Cloud.
 
 ## 2.1 Hardware description
 
@@ -38,7 +50,8 @@ The IoT devices create tasks that must be assigned to run either in the IoT devi
 
 * **Data connections**: It was established that both 5G and fiber optic communications could reach speeds of up to 1Gbps. For both, latency is set at 5ms.
 
-# 3 Cost Model
+# 3 Calculation total task cost
+The scheduling algorithm (presented in Chapter 4.) implements a cost model that evaluates the cost of processing a task locally in the IoT device, locally in the MEC server ou remotelly in the Cloud. The cost model and the equations used to calculate energy consume and elapsed time are shown in the following sections.
 
 ## 3.1 Energy equations
 
@@ -50,6 +63,23 @@ The DVFS (Dynamic Voltage and Frequency Scaling) technique is used in order to a
 # 4. The TEMS scheduling algorithm
 So we have the three layer architecture, the layers interaction with it's corresponding type of communication technology (5G and fiber optics) 
 
+
 # 5. Setting the project and running experiments
 The simulator executes a scheduling algorithm in a Mobile Edge Computing (MEC) environment. The scheduling algorithm, named TEMS (Time and Energy Minimization Scheduler) is responsable for 
+
+## 5.1 Macro allocation process
+Here is a step-by-step of how the simulator works:
+
+1. Choose the application characteristcs and configure then in the simulator. 
+
+2. Choose the number of IoT devices, MEC servers and number of created tasks. Ex.: 100 IoT devices, 2 MEC servers and 500 tasks. In this configuration each IoT device will create 5 tasks. 
+
+Tasks are created in the IoT devices. If the scheduling algorithm devices to offload the task and execute it in a MEC server, then a 5G connecting is made, adding latency to the application. But if the task if offloaded to the Cloud, then a 5G connecting is made with the MEC server, which receives the tasks data and source code, and another connecting between the MEC server and the Cloud is made, finally sending the tasks data and source code to the Cloud. In this second case more latency is added to the application. When the task's executing is complete the results must be sent back to the IoT device (the user).
+
+
+
+
+
+
+
 
