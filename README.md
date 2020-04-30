@@ -83,13 +83,24 @@ The DVFS (Dynamic Voltage and Frequency Scaling) technique is used in order to a
 
 Altering the frequency and voltage in the power equation presented in Section 3.2, we have different power levels. With a lower frequency the power and energy consumed will be smaller, but execution time may be too long. **That is a trade-off the scheduling algorithm deals with**.
 
-To make things crearer, look at the image below and see how pair of frequency and voltage can alter the power of a CPU core.
+To make things clearer, look at the image below and see how pair of frequency and voltage can alter the power of a CPU core.
 
+![DVFS for a Intel Pentium M processor of 1.6GHz](images/DVFScore.PNG) (INTEL, 2004)
 
+## 3.4 Cost model equations by task and for the system
+Using the equations shown before we can calculate the total elapsed time and total energy consumed by **one** task in the system:
+
+![Cost of a single task](images/COSTsingleTask.PNG)
+
+In this equation the allocation option that yields the lowest cost per task is chosen. This process is made for all taks in the system. The alpha, beta and gama variable are priority variables, that can be set to prioritize one allocation option or another. A high value in a priority variable makes the corresponding allocation option more costly, which means it has lesser changes of being chosen. To make one particular allocation option more appealing (low cost) a small priority variable may be chosen.
+
+![Systems cost](images/COSTsystem.PNG)
 
 
 # 4. The TEMS scheduling algorithm
 So we have the three layer architecture, the layers interaction with it's corresponding type of communication technology (5G and fiber optics) 
+
+![The TEMS scheduling algorithm](images/TEMSalgorithm.PNG)
 
 
 # 5. Setting the project and running experiments
@@ -108,10 +119,7 @@ Tasks are created in the IoT devices. If the scheduling algorithm devices to off
 * Yu, H.; Wang, Q.; Guo, S. Energy-efficient task offloading and resource scheduling for mobile edge computing. In: 2018 IEEE International Conference on Networking, Architecture and Storage (NAS). [S.l.: s.n.], 2018. p. 1–4.
 * Tanenbaum, A. S.; Austin, T. Structured Computer Organization. 6th. ed. Prentice Hall, 2012. ISBN 0132916525,9780132916523. Available from Internet: <http://gen.lib.rus.ec/book/index.php?md5=f6fc02a547e862360e743754fc06375b>.
 * Burd, T.; Brodersen, R. Processor design for portable systems. Journal of VLSI Signal Processing, v. 13, 11 1996.
+* INTEL. Enhanced Intel SpeedStep Technology for the Intel Pentium M Processor (White Paper). [S.l.], 2004. Available from Internet: <https://web.archive.org/web/20150812030010/http://download.intel.com/design/network/papers/30117401.pdf>.
 * Sarangi, S. R.; Goel, S.; Singh, B. Energy efficient scheduling in iot networks. In: Proceedings of the 33rd Annual ACMSymposium on Applied Computing. New York, NY, USA: Association for Computing Machinery, 2018. (SAC ’18), p. 733–740. ISBN 9781450351911. Available from Internet: <https://doi.org/10.1145/3167132.3167213>.
-
-
-
-
 
 
