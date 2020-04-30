@@ -54,9 +54,20 @@ The hardware that is describe below is used in the simulator, each element with 
 # 3 Calculation total task cost
 The scheduling algorithm (presented in Chapter 4.) implements a cost model that evaluates the cost of processing a task locally in the IoT device, locally in the MEC server ou remotelly in the Cloud. The cost model and the equations used to calculate energy consume and elapsed time are shown in the following sections.
 
-## 3.2 Time equation
+## 3.1 Time equations
+To calculate the execution time in a CPU core, we have to know the total number of CPU cycles the task have (*CT*) and the core's operating frequency (*f*).
 
-## 3.1 Energy equations
+![Execution time in a CPU node](images/TIMEexecution.png) (Tanenbaum; Austin, 2012)
+
+Also, if we have data transmissions we need the following equations:
+
+![Elapsed time for data entry plus source code transfer from the IoT device to the MEC server](images/TIMEup.PNG) (Yu; Wang; Guo, 2018)
+
+![Elapsed time for results transfer from the MEC server to the IoT device](images/TIMEdown.PNG) 
+
+The variable ri(h) is the transfer rate between two layers of the architecture. Note that for IoT to MEC and MEC to IoT transfers, we use the "up" equation to send the task's entry data and source code from the IoT device to the MEC server and then the "down" equation to send the results from the MEC server back to the IoT device. If the processing is made in the Cloud, then we have an additional transfer from MEC to Cloud (entry data and source source) and then from Cloud to MEC (results). That's why running tasks in the Cloud adds more latency.
+
+## 3.2 Energy equations
 When we have some load to be processed in a CPU core the power consumed is equal to:
 
 ![Power equation for CPU](images/POWERdynamic.png) 
@@ -67,9 +78,13 @@ Given the power consumed by a CPU core the total energy consumed can be calculat
 
 ![Energy equation for CPU](images/ENERGYconsumed.png)
 
-
 ## 3.3. DVFS
-The DVFS (Dynamic Voltage and Frequency Scaling) technique is used in order to alter the energy consumed by the CPU cores of both IoT devices and MEC servers during execution time. The TEMS algorithm calculates the final costs of all options of operating frequency and core voltage and chooses the best fitting option, i. e. the pair frequency-voltage that provides the minimum calculated cost for the system.
+The DVFS (Dynamic Voltage and Frequency Scaling) technique is used in order to alter the energy consumed by the CPU cores of both IoT devices and MEC servers during execution time (Sarangi; Goel; Singh, 2018). The TEMS algorithm calculates the final costs of all options of operating frequency and core voltage and chooses the best fitting option, i. e. the pair frequency-voltage that provides the minimum calculated cost for the system.
+
+Altering the frequency and voltage in the power equation presented in Section 3.2, we have different power levels. With a lower frequency the power and energy consumed will be smaller, but execution time may be too long. **That is a trade-off the scheduling algorithm deals with**.
+
+To make things crearer, look at the image below and see how pair of frequency and voltage can alter the power of a CPU core.
+
 
 
 
@@ -90,8 +105,10 @@ Here is a step-by-step of how the simulator works:
 Tasks are created in the IoT devices. If the scheduling algorithm devices to offload the task and execute it in a MEC server, then a 5G connecting is made, adding latency to the application. But if the task if offloaded to the Cloud, then a 5G connecting is made with the MEC server, which receives the tasks data and source code, and another connecting between the MEC server and the Cloud is made, finally sending the tasks data and source code to the Cloud. In this second case more latency is added to the application. When the task's executing is complete the results must be sent back to the IoT device (the user).
 
 # References:
-* Yu, H.; Wang, Q.; Guo, S. Energy-efficient task offloading and resource scheduling for mobile edge computing. In: 2018 IEEE International Conference on Networking, Architecture and Storage (NAS). [S.l.: s.n.], 2018. p. 1–4. ISSN null.
+* Yu, H.; Wang, Q.; Guo, S. Energy-efficient task offloading and resource scheduling for mobile edge computing. In: 2018 IEEE International Conference on Networking, Architecture and Storage (NAS). [S.l.: s.n.], 2018. p. 1–4.
+* Tanenbaum, A. S.; Austin, T. Structured Computer Organization. 6th. ed. Prentice Hall, 2012. ISBN 0132916525,9780132916523. Available from Internet: <http://gen.lib.rus.ec/book/index.php?md5=f6fc02a547e862360e743754fc06375b>.
 * Burd, T.; Brodersen, R. Processor design for portable systems. Journal of VLSI Signal Processing, v. 13, 11 1996.
+* Sarangi, S. R.; Goel, S.; Singh, B. Energy efficient scheduling in iot networks. In: Proceedings of the 33rd Annual ACMSymposium on Applied Computing. New York, NY, USA: Association for Computing Machinery, 2018. (SAC ’18), p. 733–740. ISBN 9781450351911. Available from Internet: <https://doi.org/10.1145/3167132.3167213>.
 
 
 
