@@ -9,7 +9,7 @@ This project comprises of a simulator I developed for my **master's degree** at 
 There are three available resource allocation options in the system:
 * Local processing, in the Iot device: The scheduler can choose to keep the task in the IoT device and execute it locally, in it's own core.
 
-* Local processing, in the MEC server: MEC servers are local servers that bring Cloud services close to the final user and it's main objective is to lower latency for the final user. Instead of offloading a task to the Cloud (higher latency) the task can the offloading to a smaller server (MEC server) that has processing capabilities much higher than the IoT device, but has lower latency than the Cloud. 
+* Local processing, in the MEC server: MEC servers are local servers that bring Cloud services close to the final user and it's main objective is to lower latency for the final user (Yu, 2016). Instead of offloading a task to the Cloud (higher latency) the task can the offloading to a smaller server (MEC server) that has processing capabilities much higher than the IoT device, but has lower latency than the Cloud. 
 
 * Remote processing, in the Cloud's Data Centers: Data Centers are distant-centrilized processing clusters with high procesisng capabilities and virtual infinite resources. It's and available offloading option, but may add a lot of latency to the IoT application.
 
@@ -29,7 +29,6 @@ Below there are two examples of applications. Application 1 is considered of hig
 
 ![Examples of applications](images/Applications.PNG)
 
-
 # 2 Architecture
 
 The three layer architecture uses two different communication technologies. The IoT device layer communicates with the MEC layer with 5G and the MEC layer communicates with the Cloud layer with fiber optics.
@@ -42,23 +41,37 @@ It is expected that the IoT devices move around the network, that's why a wirele
 
 ## 2.1 Hardware description
 
+The hardware that is describe below is used in the simulator, each element with it's corresponding characteristics.
+
 * **IoT devices**: Each IoT device is assumed to be an Arduino Mega 2560. THe Arduino Mega 2500 has an ATmega2560 microcontroller with one 16MHz core. The available configurable frequencies for the microcontroller are 16 MHz, 8 MHz, 4MHz, 2 MHz and 1 MHz. The associated core voltages for each of the frequencies are, respectively, 5V, 4V, 2.7V, 2.3V and 1.8V. So, running a task with clock set to 2 MHz will make the voltage core be set to 2.3V.
 
 * **MEC server**: MEC servers in the intermeadiate layer are composed of 5 Raspberry Pi4 Model B boards each. Raspberry Pi 4 ModelB is  equipped with a Quad-core Cortex-A72 1.5GHZ (ARMv8) 64-bit, summing a total of 20 CPUs per MEC server. Each CPU core has operating frequencies of 1500 MHz, 1000 MHz, 750 MHz and 600 MHz; the corresponding supply voltages are 1.2 V, 1V, 0.825 V and 0.8 V.
 
 * **Data Center**: For the Cloud Computing layer were chosen Intel Xeon Cascade Lake processors of 2.8 GHz per CPU, reaching up to 3.9 GHz with Turbo Boost on. These processors can be found in some configurations on the Google Cloud.
 
-* **Data connections**: It was established that both 5G and fiber optic communications could reach speeds of up to 1Gbps. For both, latency is set at 5ms.
+* **Data connections**: It was established that both 5G and fiber optic communications could reach speeds of up to 1Gbps. For both, latency is set at 5ms. So the transfer time of a piece of data is the same in both cases. What differs is the energy consumption.
 
 # 3 Calculation total task cost
 The scheduling algorithm (presented in Chapter 4.) implements a cost model that evaluates the cost of processing a task locally in the IoT device, locally in the MEC server ou remotelly in the Cloud. The cost model and the equations used to calculate energy consume and elapsed time are shown in the following sections.
 
-## 3.1 Energy equations
+## 3.2 Time equation
 
-## 3.2 Time equations
+## 3.1 Energy equations
+When we have some load to be processed in a CPU core the power consumed is equal to:
+
+![Power equation for CPU](images/POWERdynamic.png) 
+
+For the dynamic power equation, *C* stands for capacitance, *V* for volts (CPU core tension) and *f* from frequency There are other components that could be used to make the total power more acurate, like leak power and short circuit power, aside form the load power (dynamic power). These two represent a little percentage of the total power, and are disregarded here (Burd; Brodersen, 1996).
+
+Given the power consumed by a CPU core the total energy consumed can be calculated as:
+
+![Energy equation for CPU](images/ENERGYconsumed.png)
+
 
 ## 3.3. DVFS
 The DVFS (Dynamic Voltage and Frequency Scaling) technique is used in order to alter the energy consumed by the CPU cores of both IoT devices and MEC servers during execution time. The TEMS algorithm calculates the final costs of all options of operating frequency and core voltage and chooses the best fitting option, i. e. the pair frequency-voltage that provides the minimum calculated cost for the system.
+
+
 
 # 4. The TEMS scheduling algorithm
 So we have the three layer architecture, the layers interaction with it's corresponding type of communication technology (5G and fiber optics) 
@@ -76,7 +89,9 @@ Here is a step-by-step of how the simulator works:
 
 Tasks are created in the IoT devices. If the scheduling algorithm devices to offload the task and execute it in a MEC server, then a 5G connecting is made, adding latency to the application. But if the task if offloaded to the Cloud, then a 5G connecting is made with the MEC server, which receives the tasks data and source code, and another connecting between the MEC server and the Cloud is made, finally sending the tasks data and source code to the Cloud. In this second case more latency is added to the application. When the task's executing is complete the results must be sent back to the IoT device (the user).
 
-
+# References:
+* Yu, H.; Wang, Q.; Guo, S. Energy-efficient task offloading and resource scheduling for mobile edge computing. In: 2018 IEEE International Conference on Networking, Architecture and Storage (NAS). [S.l.: s.n.], 2018. p. 1–4. ISSN null.
+* Burd, T.; Brodersen, R. Processor design for portable systems. Journal of VLSI Signal Processing, v. 13, 11 1996.
 
 
 
