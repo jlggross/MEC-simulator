@@ -2,20 +2,19 @@ package main;
 
 public class CloudDataCenter {
 
-	// Variáveis fixas
-	private String id;					// Identificação do Data Center	
-	private long freqPadrao;			// Em Hz
-	private long freqTurboBoost;		// Em Hz
+	private String id;						
+	private long standardFrequency;			// In Hz
+	private long turboBoostFrequency;		// In Hz
 	
 	
-	/* Construtor
+	/* Constructor
 	 * 
 	 * */
 	public CloudDataCenter(String id) {
 		this.id = id;
 		
-		this.freqPadrao = (long) (2.8 * Math.pow(10, 9));
-		this.freqTurboBoost = (long) (3.9 * Math.pow(10, 9));
+		this.standardFrequency = (long) (2.8 * Math.pow(10, 9));
+		this.turboBoostFrequency = (long) (3.9 * Math.pow(10, 9));
 	}		
 	
 	
@@ -24,54 +23,54 @@ public class CloudDataCenter {
 		return id;
 	}
 	
-	public long getFreqPadrao() {
-		return freqPadrao;
+	public long getStandarFrequency() {
+		return standardFrequency;
 	}
 
-	public long getFreqTurboBoost() {
-		return freqTurboBoost;
+	public long getTurboBoostFrequency() {
+		return turboBoostFrequency;
 	}
 	
 	
-	/* Calcula energia dinâmica para frequência de operação padrão
+	/* Calculate dynamic energy for the standard operating frequency
 	 * 
 	 * */
-	public double calculaEnergiaDinamicaFreqPadrao(long cargaComputacional) {
-		double energiaDin;
-		energiaDin = 13.85 * calculaTempoExecucaoFreqPadrao(cargaComputacional); // Em W*micro-segundo	
-		return energiaDin;
+	public double calculateDynamicEnergyStandardFreq(long computacionalLoad) {
+		double energyDynamic;
+		energyDynamic = 13.85 * calculateExecutionTimeStardardFreq(computacionalLoad); // In W * micro-second	
+		return energyDynamic;
 	}
 	
 	
-	/* Calcula energia dinâmica para frequência turbo boost
+	/* Calculate dynamic energy for turbo boost frequency
 	 * 
 	 * */
-	public double calculaEnergiaDinamicaFreqTurbo(long cargaComputacional) {
-		double energiaDin;
-		energiaDin = 24.28 * calculaTempoExecucaoFreqTurboBoost(cargaComputacional); // Em W*micro-segundo	
-		return energiaDin;
+	public double calculateDynamicEnergyTurboFreq(long computacionalLoad) {
+		double energyDynamic;
+		energyDynamic = 24.28 * calculaTempoExecucaoFreqTurboBoost(computacionalLoad); // In W * micro-second	
+		return energyDynamic;
 	}
 	
 	
-	/* Calcula tempo de execução para frequência de operação padrão
+	/* Calculate execution time for standard frequency
 	 * 
 	 * */
-	public double calculaTempoExecucaoFreqPadrao(long cargaComputacional) {
-		double tempo;
-		tempo = (double) cargaComputacional / (double) this.freqPadrao;	// Em segundos
-		tempo = tempo * Math.pow(10, 6); // Em micro segundos
-		return tempo;
+	public double calculateExecutionTimeStardardFreq(long computacionalLoad) {
+		double time;
+		time = (double) computacionalLoad / (double) this.standardFrequency;	// In seconds
+		time = time * Math.pow(10, 6); // In micro seconds
+		return time;
 	}
 	
 	
-	/* Calcula tempo de execução para frequência turbo boost
+	/* Calculate execution time for turbo boost frequency
 	 * 
 	 * */
-	public double calculaTempoExecucaoFreqTurboBoost(long cargaComputacional) {
-		double tempo;
-		tempo = (double) cargaComputacional / (double) this.freqTurboBoost; // Em segundos	
-		tempo = tempo * Math.pow(10, 6); // Em micro segundos
-		return tempo;
+	public double calculaTempoExecucaoFreqTurboBoost(long computacionalLoad) {
+		double time;
+		time = (double) computacionalLoad / (double) this.turboBoostFrequency; // In seconds	
+		time = time * Math.pow(10, 6); // In micro seconds
+		return time;
 	}
 	
 }

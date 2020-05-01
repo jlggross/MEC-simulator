@@ -2,39 +2,39 @@ package main;
 
 public class FiberOptics {
 
-	double latencia;		//Em s
-	double potencia;		//Em W
-	long taxaTransferencia;	//Em bits/s
+	double latency;		// In seconds
+	double power;		// In W
+	long transferRate;	// In bits/s
 	
 	public FiberOptics() {
-		this.latencia = (double) (5 * Math.pow(10, -3));
-		this.potencia = 3.65;
-		this.taxaTransferencia = (long) Math.pow(10, 9);
+		this.latency = (double) (5 * Math.pow(10, -3));
+		this.power = 3.65;
+		this.transferRate = (long) Math.pow(10, 9);
 	}
 
 	
-	/* Calcula tempo da transmissão de dados 5G
-	 * - tamanhoDados : Em bits
+	/* Calculate data transmission time for 5G
+	 * - dataSize : In bits
 	 * 
-	 * Retorno: Em micro segundos  
+	 * Return: In micro seconds  
 	 * */
-	public double calculaTempoTransmissao(long tamanhoDados) {
-		double tempoTransmissao;
-		tempoTransmissao = (double) tamanhoDados / (double) this.taxaTransferencia; // Em segundos
-		tempoTransmissao = tempoTransmissao * Math.pow(10, 6); // Em micro segundos
-		return tempoTransmissao;
+	public double calculateTransmissionTime(long dataSize) {
+		double transmissionTime;
+		transmissionTime = (double) dataSize / (double) this.transferRate; // In seconds
+		transmissionTime = transmissionTime * Math.pow(10, 6); // In micro seconds
+		return transmissionTime;
 	}
 	
 	
-	/* Calcula energia consumida durante a transferência de dados
-	 * - tamanhoDados : Em bits
+	/* Calculate energy consumed during data transfer
+	 * - dataSize : In bits
 	 * 
-	 * Retorno: W * micro-segundo  
+	 * Return: W * micro-seconds  
 	 * */
-	public double calculaEnergiaConsumida(long tamanhoDados) {
-		double energia;
-		energia = this.potencia * this.calculaTempoTransmissao(tamanhoDados);
-		return energia;
+	public double calculateEnergyConsumed(long dataSize) {
+		double energy;
+		energy = this.power * this.calculateTransmissionTime(dataSize);
+		return energy;
 	}
 	
 }

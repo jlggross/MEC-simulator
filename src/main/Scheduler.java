@@ -93,10 +93,10 @@ public class Scheduler {
 		this.energia5GVolta = this.transmission5G.calculaEnergiaConsumida(this.task.getTamanhoRetorno());
 		this.tempo5GVolta = this.transmission5G.calculaTempoTransmissao(this.task.getTamanhoRetorno());
 		
-		this.energiaFibraIda = this.transmissionFiber.calculaEnergiaConsumida(this.task.getTamanhoEntrada());
-		this.tempoFibraIda = this.transmissionFiber.calculaTempoTransmissao(this.task.getTamanhoEntrada());
-		this.energiaFibraVolta = this.transmissionFiber.calculaEnergiaConsumida(this.task.getTamanhoRetorno());
-		this.tempoFibraVolta = this.transmissionFiber.calculaTempoTransmissao(this.task.getTamanhoRetorno());
+		this.energiaFibraIda = this.transmissionFiber.calculateEnergyConsumed(this.task.getTamanhoEntrada());
+		this.tempoFibraIda = this.transmissionFiber.calculateTransmissionTime(this.task.getTamanhoEntrada());
+		this.energiaFibraVolta = this.transmissionFiber.calculateEnergyConsumed(this.task.getTamanhoRetorno());
+		this.tempoFibraVolta = this.transmissionFiber.calculateTransmissionTime(this.task.getTamanhoRetorno());
 		
 		// Calcula custos
 		/* Cada fator estabelece a priorização de utilizar uma ou outra política alocação.
@@ -113,11 +113,11 @@ public class Scheduler {
 	private void calculaCustosProcessamentoDevice(double alpha) {
 		// Captura pares freq x tensão do dispositivo IoT
 		List<Pair<Long, Double>> paresFreqTensao = new ArrayList<Pair<Long, Double>>();
-		paresFreqTensao = this.iotDevice.getParesFreqTensao();
+		paresFreqTensao = this.iotDevice.getPairsFrequencyVoltage();
 				
 		for(Pair<Long, Double> parFreqTensao : paresFreqTensao) {
-			double tempoExec = this.iotDevice.calculaTempoExecucao(parFreqTensao.getValue0(), this.task.getCargaComputacional()); 
-			double energiaDin = this.iotDevice.calculaEnergiaDinamicaConsumida(parFreqTensao.getValue0(), parFreqTensao.getValue1(), this.task.getCargaComputacional());
+			double tempoExec = this.iotDevice.calculateExecutionTime(parFreqTensao.getValue0(), this.task.getCargaComputacional()); 
+			double energiaDin = this.iotDevice.calculateDynamicEnergyConsumed(parFreqTensao.getValue0(), parFreqTensao.getValue1(), this.task.getCargaComputacional());
 			double cost = (this.fatorEnergiaConsumida * energiaDin + this.fatorTempoProcessamento * tempoExec) * alpha;
 			
 			this.costListIoTDevice.add(
@@ -160,9 +160,9 @@ public class Scheduler {
 	 * */
 	private void calculaCustosProcessamentoCloud(double gama) {
 		// Calcula custo para frquência de operação padrão
-		long freqPadrao = this.cloud.getFreqPadrao();
-		double tempoPadrao = this.cloud.calculaTempoExecucaoFreqPadrao(this.task.getCargaComputacional());
-		double energiaPadrao = this.cloud.calculaEnergiaDinamicaFreqPadrao(this.task.getCargaComputacional());
+		long freqPadrao = this.cloud.getStandarFrequency();
+		double tempoPadrao = this.cloud.calculateExecutionTimeStardardFreq(this.task.getCargaComputacional());
+		double energiaPadrao = this.cloud.calculateDynamicEnergyStandardFreq(this.task.getCargaComputacional());
 		
 		double energiaTotalPadrao = energiaPadrao + this.energia5GIda + this.energiaFibraIda + this.energiaFibraVolta + this.energia5GVolta;
 		double tempoTotalPadrao = tempoPadrao + this.tempo5GIda + this.tempoFibraIda + this.tempoFibraVolta + this.tempo5GVolta;		
@@ -176,9 +176,9 @@ public class Scheduler {
 		
 		
 		// Calcula custo para frquência de turbo boost
-		long freqTurbo = this.cloud.getFreqTurboBoost();
+		long freqTurbo = this.cloud.getTurboBoostFrequency();
 		double tempoTurbo = this.cloud.calculaTempoExecucaoFreqTurboBoost(this.task.getCargaComputacional());
-		double energiaTurbo = this.cloud.calculaEnergiaDinamicaFreqTurbo(this.task.getCargaComputacional());
+		double energiaTurbo = this.cloud.calculateDynamicEnergyTurboFreq(this.task.getCargaComputacional());
 		
 		double energiaTotalTurbo = energiaTurbo + this.energia5GIda + this.energiaFibraIda + this.energiaFibraVolta + this.energia5GVolta;
 		double tempoTotalTurbo = tempoTurbo + this.tempo5GIda + this.tempoFibraIda + this.tempoFibraVolta + this.tempo5GVolta;

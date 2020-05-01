@@ -10,6 +10,13 @@ import java.util.Random;
 import org.javatuples.Pair;
 import org.javatuples.Quartet;
 
+/* Class: Development Testing
+ * 
+ * Class used for testing
+ * Not relevant for the simulator
+ * 
+ * */
+
 public class DevTests {
 
 	public static void main(String args[]) throws IOException {

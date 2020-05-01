@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.javatuples.Octet;
-import org.javatuples.Triplet;
 
 /* Author: João Luiz Grave Gross (@jlggross)
  * Github: https://github.com/jlggross/MEC-simulator
@@ -86,7 +85,7 @@ public class SimulatorExecution {
 				continue;
 		for(int numberMECServers : listNumberMECServers) { 
 		for(Application app : appList) {
-			app.setQtdeTarefas(numberTasks); // Define number of tasks that will be created
+			app.setNumberOfTasks(numberTasks); // Define number of tasks that will be created
 			
 			// Set coefficients to calculate the tasks cost in each allocation option
 			double coefficientEnergy, coefficientTime;
@@ -104,7 +103,7 @@ public class SimulatorExecution {
 			// * A DataCenter entity is created my the Scheduler to access the Cloud
 			// characteristics. Cloud is meant to have virtual infinite resources.
 			// ---------------------------------------------------------------------------
-			long rateOfGeneratedTasks = app.getTaxaGeracao();
+			long rateOfGeneratedTasks = app.getRateGeneration();
 			
 			IoTDevice[] listOfIoTDevices = new IoTDevice[numberIoTDevices];
 			for(int i = 0; i < numberIoTDevices; i++)
@@ -120,7 +119,7 @@ public class SimulatorExecution {
 			long systemTime = 0; // Initializes simulation time (starts in zero) 
 			int numberTasksCanceledAndConcluded = 0;
 			int numberCreatedTasks = 0;
-			printMessageOnConsole("LoadVariationExperiment " + numberTasks + "-" + numberIoTDevices + "-" + numberMECServers + "-" + (long) app.getCargaComputacional());
+			printMessageOnConsole("LoadVariationExperiment " + numberTasks + "-" + numberIoTDevices + "-" + numberMECServers + "-" + (long) app.getComputationalLoad());
 
 			// ---------------------------------------------------------------------------
 			// 4. Initiates simulation
@@ -131,19 +130,21 @@ public class SimulatorExecution {
 				// 5. Verify if there are tasks to be created
 				// ---------------------------------------------------------------------------
 				for(int i = 0; i < numberIoTDevices; i++) {
-					if(((systemTime - listOfIoTDevices[i].getTempobase()) % app.getTaxaGeracao()) == 0) {
+					if(((systemTime - listOfIoTDevices[i].getBaseTime()) % app.getRateGeneration()) == 0) {
 						
-						// A task is created
+						// ---------------------------------------------------------------------------
+						// 5.1. A task is created
+						// ---------------------------------------------------------------------------
 						Task newTask = new Task("TarefaDummy", "DeviceDummy", -1, 0, 0, 0, 0);
 						if(numberCreatedTasks < numberTasks) {
-							if(app.defineSeTarefaCritica(numberCreatedTasks) == Boolean.TRUE) {
+							if(app.defineIfTaskIsCritical(numberCreatedTasks) == Boolean.TRUE) {
 								newTask = new Task("Task-" + numberCreatedTasks, listOfIoTDevices[i].getId(), 
-													app.getDeadlineCriticas(), systemTime, app.getCargaComputacional(),
-													app.getEntradaDados(), app.getResultados());
+													app.getCriticalTasksDeadline(), systemTime, app.getComputationalLoad(),
+													app.getDataEntrySize(), app.getResultsSize());
 							}
 							else {
 								newTask = new Task("Task-" + numberCreatedTasks, listOfIoTDevices[i].getId(), -1, 
-													systemTime, app.getCargaComputacional(), app.getEntradaDados(), app.getResultados());
+													systemTime, app.getComputationalLoad(), app.getDataEntrySize(), app.getResultsSize());
 							}
 							numberCreatedTasks++;
 						}
@@ -151,7 +152,7 @@ public class SimulatorExecution {
 							break;
 						
 						// ---------------------------------------------------------------------------
-						// 5.1. Start the scheduler and task allocation
+						// 5.2. Start the scheduler and task allocation
 						// ---------------------------------------------------------------------------
 						
 						// Computes allocation options costs for the task
@@ -160,7 +161,7 @@ public class SimulatorExecution {
 						
 						// Verify if the IoT device that created the task is with it's processing core available
 						boolean flagIoTDevice = Boolean.FALSE;
-						if(listOfIoTDevices[i].verificaCPULivre() == Boolean.TRUE)
+						if(listOfIoTDevices[i].verifyCPUFree() == Boolean.TRUE)
 							flagIoTDevice = Boolean.TRUE;
 						
 						// Verify is there is an avaliable processing core in the MEC servers
@@ -178,8 +179,8 @@ public class SimulatorExecution {
 
 						// Occupy hardware resources
 						if(octet.getValue7() == POLICY1_IOT) {
-							listOfIoTDevices[i].alteraStatusCPU(CORE_OCCUPIED);
-							listOfIoTDevices[i].consomeBateria(octet.getValue1() + octet.getValue2());
+							listOfIoTDevices[i].alterCPUStatus(CORE_OCCUPIED);
+							listOfIoTDevices[i].consumeBaterry(octet.getValue1() + octet.getValue2());
 						} else if(octet.getValue7() == POLICY2_MEC) {
 							for(int j = 0; j < numberMECServers; j++) {
 								if(listOfMECServers[j].verificaCPULivre() == Boolean.TRUE) {
@@ -190,7 +191,7 @@ public class SimulatorExecution {
 						}
 						
 						// -----------------------------------------------------------------------------
-						// 5.2. Updates energy consumed, elapsed time and allocation policy for the task
+						// 5.3. Updates energy consumed, elapsed time and allocation policy for the task
 						// -----------------------------------------------------------------------------						
 						newTask.setEnergiaExecucao(octet.getValue1());
 						newTask.setEnergiaTransmissaoDados(octet.getValue2());
@@ -200,13 +201,13 @@ public class SimulatorExecution {
 						
 						if(Boolean.FALSE) {
 							printMessageOnConsole(listOfIoTDevices[i].getId() + " - Battery Level: " + 
-									listOfIoTDevices[i].getNivelBateria() + "; CORE Free: " + 
-									listOfIoTDevices[i].verificaCPULivre());
+									listOfIoTDevices[i].getBatteryLevel() + "; CORE Free: " + 
+									listOfIoTDevices[i].verifyCPUFree());
 						}
 											
 						
 						// -----------------------------------------------------------------------------
-						// 5.3. Task is allocated. Add task in the monitoring list. Start new iteration
+						// 5.4. Task is allocated. Add task in the monitoring list. Start new iteration
 						// -----------------------------------------------------------------------------
 						listRunningTasks.add(newTask);
 						
@@ -244,7 +245,7 @@ public class SimulatorExecution {
 							// ---------------------------------------------------------------------------
 							if(task.getPolitica() == POLICY1_IOT) {
 								int id = Integer.parseInt(task.getIdDeviceGerador().split("-")[1]);
-								listOfIoTDevices[id].alteraStatusCPU(CORE_FREE);
+								listOfIoTDevices[id].alterCPUStatus(CORE_FREE);
 							}
 							if(task.getPolitica() == POLICY2_MEC) {
 								for(int j = 0; j < numberMECServers; j++) {
@@ -281,7 +282,7 @@ public class SimulatorExecution {
 			// Simulation round ended - Print results for analysis
 			// ---------------------------------------------------------------------------
 			if(Boolean.TRUE) {
-				String filename = "01-" + numberTasks + "-" + numberIoTDevices + "-" + numberMECServers + "-" + (long) app.getCargaComputacional();
+				String filename = "01-" + numberTasks + "-" + numberIoTDevices + "-" + numberMECServers + "-" + (long) app.getComputationalLoad();
 				String testType = "LoadVariation";
 				printSimulationLog(filename, listFinishedTasks, coefficientEnergy, coefficientTime, testType);
 			}
@@ -302,30 +303,36 @@ public class SimulatorExecution {
 	
 		
 	/* Print simulation log for analysis
+	 * - filename: the name to put in the output file
+	 * - tasksFInalized: set of finalized tasks in the simulation
+	 * - coefficientEnergy: Coefficient used for energy consumption in the task's cost equation
+	 * - coefficientTime: Coefficient used for elapsed time in the task's cost equation
+	 * - testType: name of the test/experiment being executed in the simulation
 	 * 
-	 * TODO 
+	 * Observation: The content of the .txt file is separated with commas, so it can be easily
+	 * imported in excel with the the import from text option using a delimiter (comma).
 	 * 
 	 * */
-	public static void printSimulationLog(String filename, Task[] tarefasFinalizadas, 
-			double fatorEnergia, double fatorTempo, String testType) throws IOException {
+	public static void printSimulationLog(String filename, Task[] tasksFinalized, 
+			double coefficientEnergy, double coefficientTime, String testType) throws IOException {
 		
 		filename = filename + "-" + testType + ".txt";
 		
-		// Octet<Tempo; Política; Status Finalização, Energia CPU, Energia transmissão, Tempo CPU, Tempo transmissão, Custo>
+		// Octet<Time; Policy; Finalization Status, Energy CPU core, Energy data transmission, Time CPU core, Time data transmission, Cost>
 		List<Octet<Long, String, String, Long, Long, Long, Long, Long>> listOctet = 
 				new ArrayList<Octet<Long, String, String, Long, Long, Long, Long, Long>>();
 		
-		for(int i = 0; i < tarefasFinalizadas.length; i++) {
+		for(int i = 0; i < tasksFinalized.length; i++) {
 			String policy;
-			if(tarefasFinalizadas[i].getPolitica() == POLICY1_IOT)
+			if(tasksFinalized[i].getPolitica() == POLICY1_IOT)
 				policy = "POLICY1_IOT";
-			else if(tarefasFinalizadas[i].getPolitica() == POLICY2_MEC)
+			else if(tasksFinalized[i].getPolitica() == POLICY2_MEC)
 				policy = "POLICY2_MEC";
 			else
 				policy = "POLICY3_CLOUD";
 			
 			String statusFinalizacao;
-			if(tarefasFinalizadas[i].getStatusTarefa() == TASK_CONCLUDED)
+			if(tasksFinalized[i].getStatusTarefa() == TASK_CONCLUDED)
 				statusFinalizacao = "TASK_CONCLUDED";
 			else
 				statusFinalizacao = "TASK_CANCELED";
@@ -333,14 +340,14 @@ public class SimulatorExecution {
 			Octet<Long, String, String, Long, Long, Long, Long, Long> octet = 
 					new Octet<Long, String, String, Long, Long, Long, Long, Long>
 					( 
-						(long) (tarefasFinalizadas[i].getTempoBase() + tarefasFinalizadas[i].getTempoTotalDecorrido()),
+						(long) (tasksFinalized[i].getTempoBase() + tasksFinalized[i].getTempoTotalDecorrido()),
 						policy, 
 						statusFinalizacao, 
-						(long) tarefasFinalizadas[i].getEnergiaExecucao(), 
-						(long) tarefasFinalizadas[i].getEnergiaTransmissaoDados(), 
-						tarefasFinalizadas[i].getTempoExecucao(), 
-						tarefasFinalizadas[i].getTempoTransmissaoDados(), 
-						(long) (fatorEnergia*tarefasFinalizadas[i].getEnergiaTotalConsumida() + fatorTempo*tarefasFinalizadas[i].getTempoTotalDecorrido())
+						(long) tasksFinalized[i].getEnergiaExecucao(), 
+						(long) tasksFinalized[i].getEnergiaTransmissaoDados(), 
+						tasksFinalized[i].getTempoExecucao(), 
+						tasksFinalized[i].getTempoTransmissaoDados(), 
+						(long) (coefficientEnergy*tasksFinalized[i].getEnergiaTotalConsumida() + coefficientTime*tasksFinalized[i].getTempoTotalDecorrido())
 					);
 			
 			listOctet.add(octet);
@@ -355,7 +362,7 @@ public class SimulatorExecution {
 	
 	
 	/* Print Octet
-	 * [Time; Policy; Finalization Status, Energy CPU core, Energy data transmission, Time CPU core, Time data transmission	, Cost]
+	 * [Time; Policy; Finalization Status, Energy CPU core, Energy data transmission, Time CPU core, Time data transmission, Cost]
 	 * 
 	 * 0 Time 							: Time in which the task was ended in the system.
 	 * 1 Policy 						: Chosen allocation option/policy. Can be 1 (IoT, 2 (MEC) or 3 (Cloud).
@@ -369,6 +376,7 @@ public class SimulatorExecution {
 	 * */
 	public static void imprimeOctetoParaArquivo(String filename, String header, 
 			List<Octet<Long, String, String, Long, Long, Long, Long, Long>> listOctet) throws IOException {
+		
 		BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
 	    
 		writer.write(header);

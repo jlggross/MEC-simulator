@@ -8,58 +8,50 @@ import org.javatuples.Pair;
 
 public class IoTDevice {
 
-	// Variáveis fixas
-	private List<Pair<Long, Double>> paresFreqTensao = new ArrayList<Pair<Long, Double>>();
+	private List<Pair<Long, Double>> pairsFrequencyVoltage = new ArrayList<Pair<Long, Double>>();
 
-	private String id;					// Identificação do nodo
-	private double capacitancia; 		// Capacitância da arquitetura
-	private double potenciaIdle;		// Potência da CPU em idle	
-	private double nivelBateria;		// Em W * (micro segundo)	
-	private double LIS;					// Em W * (micro segundo) - Limite Inferior de Segurança
+	private String id;					
+	private double capacitance; 		// Chipset capacitance
+	private double powerIdle;			// Power when CPU in idle	
+	private double batteryLevel;		// In W * (micro second)	
+	private double ISL;					// In W * (micro second) - Inferior Safety Limit
 
-	private long tempoBase;				// Em micro segundos
-										/* Tempo no qual é criada a primeira tarefa. A partir daí
-										cria novas tarefas em ciclos de tempo equivalentes à taxa
-										de geração da aplicação. Por exemplo: O tempoBase é definido
-										como 150 micro segundos, ou seja, o tempo global do sistema
-										começa em zero e quando atingir 150 micro segundos uma tarefa
-										é gerada. A próxima tarefa só será gerada após passado o tempo
-										da taxa de geração da aplicação. Se a taxa de geração for 0,1
-										segundos, então a primeira tarefa será gerada no tempoBase,
-										ou seja, 150 micro segundos e a segunda tarefa gerada no 
-										tempoBase + taxa de geração, ou 150 micro segundos + 10.000 
-										micro segundos (0,1 s). */
-	private long taxaGeracaoTarefas;	// Em micro segundos
-										/* Indica qual a taxa de geração de novas tarefas, se de 1 em
-										1 segundos, se de 0,1 em 0,1 segundos, etc. */
+	private long baseTime;				// In micro seconds
+										/* Time in which the first task is created. From there the IoT device
+										 * creates new tasks in time periods equal to the task generation rate, 
+										 * that is given by the application class.
+										 * Example: If baseTime is set to 150 micro seconds, i.e. global system
+										 * time went from zero to 150 micro seconds, it means that the IoT device
+										 * created it's first task in time 150 micro seconds. The next task to be
+										 * created by the IoT device will happen in baseTime + taskGenerationRate
+										 * */
+	private long taskGenerationRate;	// In micro seconds	
+	private int statusCPU;				// Has values CPU_FREE or CPU_OCCUPIED
+	private static int CPU_FREE = 1;
+	private static int CPU_OCCUPIED = 2;
 	
 	
-	private int statusCPU;				// Recebe os valores CPU_LIVRE ou CPU_OCUPADA
-	private static int CPU_LIVRE = 1;
-	private static int CPU_OCUPADA = 2;
-	
-	
-	/* Construtor
+	/* Constructor
 	 * 
 	 * */
-	public IoTDevice(String id, long taxaGeracaoTarefas) {
+	public IoTDevice(String id, long taskGenerationRate) {
 		this.id = id;
-		this.taxaGeracaoTarefas = taxaGeracaoTarefas;
-		this.tempoBase = new Random().nextInt((int) this.taxaGeracaoTarefas) + 1; //Em micro segundos		
+		this.taskGenerationRate = taskGenerationRate;
+		this.baseTime = new Random().nextInt((int) this.taskGenerationRate) + 1; // In micro seconds		
 		
-		this.capacitancia = (double) (2.2 * Math.pow(10, -9)); // Em Farads
-		this.potenciaIdle = (double) (900 * Math.pow(10, -6)); // Em W
-		this.nivelBateria = 36000 * Math.pow(10, 6); // 36000 Ws - Equivalente a 36000*10^6 W*micro-segundo, 10Wh ou 2000mAh a 5V
-		this.LIS = nivelBateria * 0.1;
+		this.capacitance = (double) (2.2 * Math.pow(10, -9)); 	// In Farads
+		this.powerIdle = (double) (900 * Math.pow(10, -6)); 	// In W
+		this.batteryLevel = 36000 * Math.pow(10, 6); 			// 36000 Ws - Equivalent to 36000*10^6 W*micro-second, 10Wh or 2000mAh with 5V
+		this.ISL = batteryLevel * 0.1;							// ISL is 10% of maximum battery capacity
 		
-		// Frequências de operação do Arduino Mega 2560
-		this.paresFreqTensao.add(new Pair<Long, Double> ((long) (1 * Math.pow(10, 6)), 1.8));
-		this.paresFreqTensao.add(new Pair<Long, Double> ((long) (2 * Math.pow(10, 6)), 2.3));
-		this.paresFreqTensao.add(new Pair<Long, Double> ((long) (4 * Math.pow(10, 6)), 2.7));
-		this.paresFreqTensao.add(new Pair<Long, Double> ((long) (8 * Math.pow(10, 6)), 4.0));
-		this.paresFreqTensao.add(new Pair<Long, Double> ((long) (16 * Math.pow(10, 6)), 5.0));
+		// Operating frequencies for Arduino Mega 2560
+		this.pairsFrequencyVoltage.add(new Pair<Long, Double> ((long) (1 * Math.pow(10, 6)), 1.8));
+		this.pairsFrequencyVoltage.add(new Pair<Long, Double> ((long) (2 * Math.pow(10, 6)), 2.3));
+		this.pairsFrequencyVoltage.add(new Pair<Long, Double> ((long) (4 * Math.pow(10, 6)), 2.7));
+		this.pairsFrequencyVoltage.add(new Pair<Long, Double> ((long) (8 * Math.pow(10, 6)), 4.0));
+		this.pairsFrequencyVoltage.add(new Pair<Long, Double> ((long) (16 * Math.pow(10, 6)), 5.0));
 		
-		this.statusCPU = CPU_LIVRE;
+		this.statusCPU = CPU_FREE;
 	}
 	
 	/* Getters */
@@ -67,99 +59,100 @@ public class IoTDevice {
 		return this.id;
 	}
 	
-	public long getTempobase() {
-		return this.tempoBase;
+	public long getBaseTime() {
+		return this.baseTime;
 	}
 	
-	public List<Pair<Long, Double>> getParesFreqTensao() {
-		return paresFreqTensao;
+	public List<Pair<Long, Double>> getPairsFrequencyVoltage() {
+		return pairsFrequencyVoltage;
 	}
 	
-	public double getNivelBateria() {
-		return this.nivelBateria;
+	public double getBatteryLevel() {
+		return this.batteryLevel;
 	}
 	
 	
-	/* Calcula potência dinâmica do dispositivo IoT
+	/* Calculate dynamic power of IoT device
 	 * 
-	 * Retorno: Em W
+	 * Return: power in W
 	 * */
-	public double calculaPotenciaDinamica(long frequenciaOperacao, double tensao) {
-		double potencia;
-		potencia = (double) (this.capacitancia * Math.pow(tensao, 2) * (double) frequenciaOperacao); // Em W		
-		return potencia;
+	public double calculateDynamicPower(long operatingFrequency, double voltage) {
+		double power;
+		power = (double) (this.capacitance * Math.pow(voltage, 2) * (double) operatingFrequency); // In W		
+		return power;
 	}
 	
 	
-	/* Calcula tempo de execução
+	/* Calculate the execution time
 	 * 
-	 * Retorno: Em micro segundos
+	 * Return: In micro seconds
 	 * */
-	public double calculaTempoExecucao(long frequenciaOperacao, long cargaComputacional) {
-		double tempo;
-		tempo = (double) ((double) cargaComputacional / (double) frequenciaOperacao); // Resultado em segundos
-		tempo = tempo * Math.pow(10, 6); // Resultado em micro segundos
-		return tempo;
+	public double calculateExecutionTime(long operatingFrequency, long computacionalLoad) {
+		double time;
+		time = (double) ((double) computacionalLoad / (double) operatingFrequency); // In seconds
+		time = time * Math.pow(10, 6); // In micro seconds
+		return time;
 	}
 	
 	
-	/* Calcula energia dinâmica consumida
+	/* Calculate consumed dynamic energy
 	 * 
-	 * Retorno: W * micro-segundo
+	 * Return: W * micro-second
 	 * */
-	public double calculaEnergiaDinamicaConsumida(long frequenciaOperacao, double tensao, long cargaComputacional) {
-		double energia;
-		energia = this.calculaPotenciaDinamica(frequenciaOperacao, tensao) * this.calculaTempoExecucao(frequenciaOperacao, cargaComputacional); // Resultado em W * micro-segundo
-		return energia;
+	public double calculateDynamicEnergyConsumed(long operatingFrequency, double voltage, long computacionalLoad) {
+		double energy;
+		energy = this.calculateDynamicPower(operatingFrequency, voltage) * 
+				this.calculateExecutionTime(operatingFrequency, computacionalLoad); // In W * micro-second
+		return energy;
 	}
 	
 	
-	/* Calcula energia idle consumida
-	 * - tempoEmIdle: em micro segundos
+	/* Calculate consumed idle energy
+	 * - timeInIdle: in micro seconds
 	 * 
-	 * Retorno: W * micro-segundo 
+	 * Return: W * micro-second 
 	 * */
-	public double calculaEnergiaIdleConsumida(double tempoEmIdle) {
-		double energiaIdle;
-		energiaIdle = this.potenciaIdle * tempoEmIdle;
-		return energiaIdle;
+	public double calculateConsumedIdleEnergy(double timeInIdle) {
+		double idleEnergy;
+		idleEnergy = this.powerIdle * timeInIdle;
+		return idleEnergy;
 	}
 	
 	
-	/* Consumir bateria do dispositivo IoT
-	 * - energiaConsumida em W*s
+	/* Consumes battery for IoT device
+	 * - consumedEnergy in W*s
 	 * */
-	public void consomeBateria(double energiaConsumida) {
-		this.nivelBateria = this.nivelBateria - energiaConsumida;
+	public void consumeBaterry(double consumedEnergy) {
+		this.batteryLevel = this.batteryLevel - consumedEnergy;
 	}	
 	
 	
-	/* Verifica se a CPU está livre
-	 * - Retorna TRUE se a CPU estiver livre livre
-	 * - Retorna FALSE se a CPU estiver ocupada
+	/* Verify if CPU is free
+	 * - Return TRUE if CPU is free
+	 * - Return FALSE if CPU is occupied
 	 * */
-	public boolean verificaCPULivre() {
-		if(this.nivelBateria <= this.LIS) {
-			System.out.println(this.id + " atingiu nível de bateria LIS.");
+	public boolean verifyCPUFree() {
+		if(this.batteryLevel <= this.ISL) {
+			System.out.println(this.id + " has reached battery's ISL.");
 			return Boolean.FALSE;
 		}
-		if(this.statusCPU == CPU_LIVRE)
+		if(this.statusCPU == CPU_FREE)
 			return Boolean.TRUE;
 		return Boolean.FALSE;
 	}
 	
 	
-	/* Altera o status da CPU
-	 * - novoStatus = 1 : CPU_LIVRE
-	 * - novoStatus = 2 : CPU_OCUPADA
+	/* Alter the CPU status
+	 * - newStatus = 1 : CPU_FREE
+	 * - newStatus = 2 : CPU_OCCUPIED
 	 * */
-	public void alteraStatusCPU(int novoStatus) {
-		if(novoStatus != CPU_LIVRE && novoStatus != CPU_OCUPADA) {
-			System.out.println(id + "-alteraStatusCPU() : novoStatus não é LIVRE nem OUCPADO.");
+	public void alterCPUStatus(int newStatus) {
+		if(newStatus != CPU_FREE && newStatus != CPU_OCCUPIED) {
+			System.out.println("Error - " + id + " - alterCPUStatus() : new status isn't FREE or OCCUPIED.");
 			System.exit(0);
 		}
 		
-		this.statusCPU = novoStatus;
+		this.statusCPU = newStatus;
 	}
 
 }

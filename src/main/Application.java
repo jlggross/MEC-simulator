@@ -1,6 +1,6 @@
 package main;
 
-/* Classe para definição dos parâmetros da aplicação que será simulada.
+/* Class used to define the application parameters used for the simulation.
  * 
  * */
 
@@ -8,34 +8,35 @@ public class Application {
 
 	private String id;
 	
-	private long taxaGeracao; 				// Em micro segundos
-	private long entradaDados;				// Em bits
-	private long resultados;				// Em bits
-	private long cargaComputacional;		// Em ciclos de CPU
-	private double percentualCriticas;		// Em percentual - entre 0 e 1
-	private long deadlineCriticas;			// Em micro segundos
-	private int qtdeTarefas;				
+	private long rateGeneration; 			// In micro seconds
+	private long dataEntrySize;				// In bits
+	private long resultsSize;				// In bits
+	private long computacionalLoad;			// In CPU cycles
+	private double criticalTasksPercentage;	// In percentage (0 to 1)
+	private long ciriticalTasksDeadline;	// In micro seconds
+	private int numberOfTasks;				
 	
-	/* Construtor
+	/* Constructor
 	 * 
 	 * */
-	public Application(String id, long taxaGeracao, long entradaDados, long resultados, long cargaComputacional, double percentualCriticas, long deadlineCriticas) {
+	public Application(String id, long rateGeneration, long dataEntrySize, long resultsSize, 
+			long computacionalLoad, double criticalTasksPercentage, long criticalTasksDeadline) {
 		
 		this.id = id;
 		
-		this.taxaGeracao = taxaGeracao;
-		this.entradaDados = entradaDados;
-		this.resultados = resultados;
-	    this.cargaComputacional = cargaComputacional;
+		this.rateGeneration = rateGeneration;
+		this.dataEntrySize = dataEntrySize;
+		this.resultsSize = resultsSize;
+	    this.computacionalLoad = computacionalLoad;
 	    
-	    if(this.percentualCriticas > 1 || this.percentualCriticas < 0) {
-	    	System.out.println("TestApp " + id + ": percentualCriticas fora dos limites");
+	    if(this.criticalTasksPercentage > 1 || this.criticalTasksPercentage < 0) {
+	    	System.out.println("App " + id + ": criticalTasksPercentage out of bounds");
 	    	System.exit(0);
 	    }
 		
-	    this.percentualCriticas = percentualCriticas;
-		this.deadlineCriticas = deadlineCriticas;
-		this.qtdeTarefas = 0;
+	    this.criticalTasksPercentage = criticalTasksPercentage;
+		this.ciriticalTasksDeadline = criticalTasksDeadline;
+		this.numberOfTasks = 0;
 	}
 	
 	
@@ -44,52 +45,52 @@ public class Application {
 		return this.id;
 	}
 	
-	public long getTaxaGeracao() {
-		return this.taxaGeracao;
+	public long getRateGeneration() {
+		return this.rateGeneration;
 	}
 
-	public long getEntradaDados() {
-		return this.entradaDados;
+	public long getDataEntrySize() {
+		return this.dataEntrySize;
 	}
 	
-	public long getResultados() {
-		return resultados;
+	public long getResultsSize() {
+		return resultsSize;
 	}
 	
-	public double percentualCriticas() {
-		return this.percentualCriticas;
+	public double getCriticalTasksPercentage() {
+		return this.criticalTasksPercentage;
 	}
 
-	public long getDeadlineCriticas() {
-		return this.deadlineCriticas;
+	public long getCriticalTasksDeadline() {
+		return this.ciriticalTasksDeadline;
 	}
 	
-	public int getQtdeTarefas() {
-		return this.qtdeTarefas;
+	public int getNumberOfTasks() {
+		return this.numberOfTasks;
 	}
 	
-	public long getCargaComputacional() {
-		return cargaComputacional;
+	public long getComputationalLoad() {
+		return computacionalLoad;
 	}
 	
 	
 	/* Setters */
-	public void setQtdeTarefas(int qtdeTarefas) {
-		this.qtdeTarefas = qtdeTarefas;
+	public void setNumberOfTasks(int numberOfTasks) {
+		this.numberOfTasks = numberOfTasks;
 	}
 	
 	
-	/* Define se a tarefa é crítica ou não
-	 * - Essa função deve ser chamada toda vez que uma tarefa é criada.
-	 * - Ao chamar a aplicação irá definir se a nova tarefa é crítica ou não,
-	 * baseado no percentual de tarefas críticas.
+	/* Define if task is critical or not
+	 * - This function must be called every time a task is created.
+	 * - When calling this function the application will define if the new task is critical or not
+	 * based in the percentage of critical tasks of the application.
 	 * */
-	public boolean defineSeTarefaCritica(int numTarefa) {
-		if((int) ((numTarefa+1) * this.qtdeTarefas * this.percentualCriticas) % this.qtdeTarefas == 0) {
-			return Boolean.TRUE; // Tarefa é crítica
+	public boolean defineIfTaskIsCritical(int numberOfTask) {
+		if((int) ((numberOfTask+1) * this.numberOfTasks * this.criticalTasksPercentage) % this.numberOfTasks == 0) {
+			return Boolean.TRUE; // Task is critical
 		}
 		else {
-			return Boolean.FALSE; // Tarefa não é crítica
+			return Boolean.FALSE; // Task is not critical
 		}
 	}
 	
