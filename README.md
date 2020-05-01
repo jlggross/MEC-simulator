@@ -102,6 +102,9 @@ So we have the three layer architecture, the layers interaction with it's corres
 
 ![The TEMS scheduling algorithm](images/TEMSalgorithm.PNG)
 
+Initially the scheduler collects information about the CPU cores from IoT devices, MEC servers and Data Centers (frequency-voltage pairs for DVFS, chipset capacitance, the battery level of IoT devices and set of tasks). In step 2 first the critical tasks are allocated, because of the deadline constraint, and then the non-critical tasks. Both sets of tasks are allocated to the processing option that brings the lesser cost for the system. For the particular case of critical tasks, the selected processing option also needs processing time smaller than the deadline, so it may not have the minimum cost for the system, but the scheduler will choose the minimum cost that allows the task to be concluded before deadline.
+
+In step 3 tasks are monitored for conclusion. If a task finishes then the hardware used is made available for other tasks. Finally in step 4, the scheduler monitors the system for new tasks and updates the level of batteries for each IoT devices. If an IoT device reaches a inferior security limit of level battery, then allocation cannot occur in the IoT device anymore, because the scheduler will preserve the device to keep running (alive) and creating new tasks (application and users experience is maintained).
 
 # 5. Setting the project and running experiments
 The simulator executes a scheduling algorithm in a Mobile Edge Computing (MEC) environment. The scheduling algorithm, named TEMS (Time and Energy Minimization Scheduler) is responsable for 
