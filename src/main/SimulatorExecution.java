@@ -10,371 +10,281 @@ import java.util.List;
 import org.javatuples.Octet;
 import org.javatuples.Triplet;
 
-/* Informações sobre a simulação:
+/* Author: João Luiz Grave Gross (@jlggross)
+ * Github: https://github.com/jlggross/MEC-simulator
+ * Dependencies: javatuples-1.2.jar
+ *
+ * General info:
+ * - The systems cycle time is 1 micro second.
+ * - The simulation checks the entire system and advances 1 micro second in time.  
+ * - All decision making process is made in intervals of 1 micro second.
+ * - The simulation ends when all tasks are finalized. 
  * 
- * - O tempo de ciclo do sistema é de 1 micro segundo. A simulação varre o sistema 
- * e avança no tempo 1 micro segundo para nova análise. Todas as tomadas de decisão
- * ocorrem em intervalos de 1 micro segundo. 
- * - O tempo de simulação irá correr até a finalização da última tarefa
- * 
- * Tempos
- * - todos os tempos são em micro segundos, que é o tempo de ciclo de simulação
+ * Times:
+ * - All times used in the variables are in micro seconds (the base time unit for the simulation)
  * */
 
 
 public class SimulatorExecution {
 
-	static int CPU_LIVRE = 1;
-	static int CPU_OCUPADA = 2;
+	static int CORE_FREE = 1;
+	static int CORE_OCCUPIED = 2;
 	
-	static int POLITICA1 = 1;
-	static int POLITICA2 = 2;
-	static int POLITICA3 = 3;
+	static int POLICY1_IOT = 1;
+	static int POLICY2_MEC = 2;
+	static int POLICY3_CLOUD = 3;
 	
-	static int TAREFA_VIVA = 1;
-	static int TAREFA_CONCLUIDA = 2;	
-	static int TAREFA_CANCELADA = 3;
+	static int TASK_ALIVE = 1;
+	static int TASK_CONCLUDED = 2;	
+	static int TASK_CANCELED = 3;
 	
 		
 	public static void main(String args[]) throws IOException {
 		
-		// Parâmetros para a simulação
-		List<Application> appList = new ArrayList<Application>();
-		
-		// Aplicação 1 - Carga 2000 * 10^6
-		long taxaGeracao = (long) (10 * Math.pow(10, 6)); //Em micro segundos
-		long entradaDados = (long) (36.288 * 8 * Math.pow(10, 6));
-		long resultados = (long) Math.pow(10, 4);
-		long cargaComputacional = (long) (20 * Math.pow(10, 6));
-		long deadlineCriticas = (long) (0.5 * Math.pow(10, 6)); //Em micro segundos
-		double percentualCriticas = (double) 0.1;
-		appList.add(new Application("App1-1", taxaGeracao, entradaDados, resultados, cargaComputacional, percentualCriticas, deadlineCriticas));
-		
-		// Aplicação 1 - Carga 20 * 10^6
-		taxaGeracao = (long) (10 * Math.pow(10, 6)); //Em micro segundos
-		entradaDados = (long) (36.288 * 8 * Math.pow(10, 6));
-		resultados = (long) Math.pow(10, 4);
-		cargaComputacional = (long) (20 * Math.pow(10, 6));
-		deadlineCriticas = (long) (0.5 * Math.pow(10, 6)); //Em micro segundos
-		percentualCriticas = (double) 0.1;
-		appList.add(new Application("App1-3", taxaGeracao, entradaDados, resultados, cargaComputacional, percentualCriticas, deadlineCriticas));
-		
-		// Aplicação 1 - Carga 2 * 10^6
-		taxaGeracao = (long) (10 * Math.pow(10, 6)); //Em micro segundos
-		entradaDados = (long) (36.288 * 8 * Math.pow(10, 6));
-		resultados = (long) Math.pow(10, 4);
-		cargaComputacional = (long) (2 * Math.pow(10, 6));
-		deadlineCriticas = (long) (0.5 * Math.pow(10, 6)); //Em micro segundos
-		percentualCriticas = (double) 0.1;
-		appList.add(new Application("App1-3", taxaGeracao, entradaDados, resultados, cargaComputacional, percentualCriticas, deadlineCriticas));
-		
-		// Aplicação 2
-		taxaGeracao = (long) (0.1 * Math.pow(10, 6)); //Em micro segundos
-		entradaDados = (long) (4 * 8 * Math.pow(10, 6));
-		resultados = (long) (5 * Math.pow(10, 3));
-		cargaComputacional = (long) (200 * Math.pow(10, 6));
-		deadlineCriticas = (long) (0.1 * Math.pow(10, 6)); //Em micro segundos
-		percentualCriticas = (double) 0.5;
-		appList.add(new Application("App2", taxaGeracao, entradaDados, resultados, cargaComputacional, percentualCriticas, deadlineCriticas));
-		
-		
 		// ---------------------------------------------------------------------------
-		// Simulação
-		// ---------------------------------------------------------------------------		
-		List<Integer> listaQtdeMaxTarefas = Arrays.asList(500, 5000);
-		List<Integer> listaQtdeIoTdevices = Arrays.asList(100, 500, 1000);
-		List<Integer> listaQtdeMECServers = Arrays.asList(1, 2);
-		int qtdeDataCenters = 1;
+		// 1. Setting simulation variables
+		// * Application
+		// * Number of tasks
+		// * Number of IoT Devices
+		// * Number of MEC Servers
+		// * Energy and time coefficients for task cost calculation
+		// * Alpha, beta and gamma coefficients for task cost calculation
+		// ---------------------------------------------------------------------------
 		
-		for(int qtdeTarefas : listaQtdeMaxTarefas) {
-			List<Task> listaTarefasAndamento = new ArrayList<Task>();
-			Task[] listaTarefasFinalizadas = new Task[qtdeTarefas];
-		for(int qtdeIoTDevices : listaQtdeIoTdevices) {
-			if(qtdeIoTDevices > qtdeTarefas)
+		// Applications used in the simulation 
+		List<Application> appList = new ArrayList<Application>();
+				
+		// Application 1
+		long taskGenerationRate = (long) (10 * Math.pow(10, 4)); 
+		long taskDataEntrySize = (long) (36.288 * 8 * Math.pow(10, 6));
+		long taskResultSize = (long) Math.pow(10, 4);
+		long computacionalLoadCPUcycles = (long) (20 * Math.pow(10, 4));
+		long deadlineCriticalTasks = (long) (0.5 * Math.pow(10, 6)); 
+		double percentageOfCriticalTasks = (double) 0.1;
+		appList.add(new Application("App1", taskGenerationRate, taskDataEntrySize, taskResultSize, 
+				computacionalLoadCPUcycles, percentageOfCriticalTasks, deadlineCriticalTasks));
+		
+		// Application 2
+		taskGenerationRate = (long) (0.1 * Math.pow(10, 6)); 
+		taskDataEntrySize = (long) (4 * 8 * Math.pow(10, 6));
+		taskResultSize = (long) (5 * Math.pow(10, 3));
+		computacionalLoadCPUcycles = (long) (200 * Math.pow(10, 6));
+		deadlineCriticalTasks = (long) (0.1 * Math.pow(10, 6)); 
+		percentageOfCriticalTasks = (double) 0.5;
+		//appList.add(new Application("App2", taskGenerationRate, taskDataEntrySize, taskResultSize, computacionalLoadCPUcycles, percentageOfCriticalTasks, deadlineCriticalTasks));
+		
+		// Lists for number of tasks, IoT devices and MEC servers
+		List<Integer> listNumberOfTasks = Arrays.asList(500, 5000);
+		List<Integer> listNumberIoTDevices = Arrays.asList(100, 500, 1000);
+		List<Integer> listNumberMECServers = Arrays.asList(1, 2);
+		
+		for(int numberTasks : listNumberOfTasks) {
+			List<Task> listRunningTasks = new ArrayList<Task>();
+			Task[] listFinishedTasks = new Task[numberTasks];
+		for(int numberIoTDevices : listNumberIoTDevices) {
+			if(numberIoTDevices > numberTasks)
 				continue;
-		for(int qtdeMECServers : listaQtdeMECServers) { 
+		for(int numberMECServers : listNumberMECServers) { 
 		for(Application app : appList) {
-			app.setQtdeTarefas(qtdeTarefas); // Define a quantidade de tarefas que serão geradas
+			app.setQtdeTarefas(numberTasks); // Define number of tasks that will be created
+			
+			// Set coefficients to calculate the tasks cost in each allocation option
+			double coefficientEnergy, coefficientTime;
+			coefficientEnergy = 4.0 / 5.0;
+			coefficientTime = 1 - coefficientEnergy;
+			
+			// Set the coefficients used in the tasks minimization equation
+			double alpha, beta, gamma;
+			alpha = beta = gamma = 1.0 / 3.0;
 			
 			// ---------------------------------------------------------------------------
-			// Inicialização
+			// 2. Create entities for the architecture
+			// * Creates the IoT Devices
+			// * Creates the MEC Servers
+			// * A DataCenter entity is created my the Scheduler to access the Cloud
+			// characteristics. Cloud is meant to have virtual infinite resources.
 			// ---------------------------------------------------------------------------
+			long rateOfGeneratedTasks = app.getTaxaGeracao();
+			
+			IoTDevice[] listOfIoTDevices = new IoTDevice[numberIoTDevices];
+			for(int i = 0; i < numberIoTDevices; i++)
+				listOfIoTDevices[i] = new IoTDevice("Device-" + i, rateOfGeneratedTasks);
+			
+			MECServer[] listOfMECServers = new MECServer[numberMECServers];
+			for(int i = 0; i < numberMECServers; i++)
+				listOfMECServers[i] = new MECServer("MEC-" + i);
+			
+			// ---------------------------------------------------------------------------
+			// 3. Initializes simulation control variables
+			// ---------------------------------------------------------------------------	
+			long systemTime = 0; // Initializes simulation time (starts in zero) 
+			int numberTasksCanceledAndConcluded = 0;
+			int numberCreatedTasks = 0;
+			printMessageOnConsole("LoadVariationExperiment " + numberTasks + "-" + numberIoTDevices + "-" + numberMECServers + "-" + (long) app.getCargaComputacional());
 
-			// Cria listas de nodos
-			long taxaGeracaoTarefas = app.getTaxaGeracao();
-			
-			IoTDevice[] listaIoTDevices = new IoTDevice[qtdeIoTDevices];
-			for(int i = 0; i < qtdeIoTDevices; i++)
-				listaIoTDevices[i] = new IoTDevice("Device-" + i, taxaGeracaoTarefas);
-			
-			MECServer[] listaMECServers = new MECServer[qtdeMECServers];
-			for(int i = 0; i < qtdeMECServers; i++)
-				listaMECServers[i] = new MECServer("MEC-" + i);
-			
-			CloudDataCenter[] listaDataCenters = new CloudDataCenter[qtdeDataCenters];
-			for(int i = 0; i < qtdeDataCenters; i++)
-				listaDataCenters[i] = new CloudDataCenter("DataCenter-" + i);
-			
-			long tempoSistema = 0; //tempo da simulação (zero micro segundos) 
-			int tarefasCanceladasEConcluidas = 0;
-			int tarefasCriadas = 0;
-			
 			// ---------------------------------------------------------------------------
-			// Começo da simulação
+			// 4. Initiates simulation
 			// ---------------------------------------------------------------------------
-			System.out.println("Cenário 01-" + qtdeTarefas + "-" + qtdeIoTDevices + "-" + qtdeMECServers + "-" + (long) app.getCargaComputacional());
-			
-			// Define fatores de peso ponderado para energia e tempo
-			double fatorEnergia, fatorTempo;
-			fatorEnergia = 4.0 / 5.0;
-			fatorTempo = 1 - fatorEnergia;
-			
-			// Define fatores de priorização das políticas de alocação
-			double alpha, beta, gama;
-			alpha = beta = gama = 1.0 / 3.0;
-			
 			while(Boolean.TRUE) {
 				
-				// Verifica se há tarefas a serem geradas
-				for(int i = 0; i < qtdeIoTDevices; i++) {
-					if(((tempoSistema - listaIoTDevices[i].getTempobase()) % app.getTaxaGeracao()) == 0) {
+				// ---------------------------------------------------------------------------				
+				// 5. Verify if there are tasks to be created
+				// ---------------------------------------------------------------------------
+				for(int i = 0; i < numberIoTDevices; i++) {
+					if(((systemTime - listOfIoTDevices[i].getTempobase()) % app.getTaxaGeracao()) == 0) {
 						
-						// Tarefa é gerada
-						Task novaTarefa = new Task("TarefaDummy", "DeviceDummy", -1, 0, 0, 0, 0);
-						if(tarefasCriadas < qtdeTarefas) {
-							if(app.defineSeTarefaCritica(tarefasCriadas) == Boolean.TRUE) {
-								novaTarefa = new Task("Tarefa-" + tarefasCriadas, listaIoTDevices[i].getId(), 
-													app.getDeadlineCriticas(), tempoSistema, app.getCargaComputacional(),
+						// A task is created
+						Task newTask = new Task("TarefaDummy", "DeviceDummy", -1, 0, 0, 0, 0);
+						if(numberCreatedTasks < numberTasks) {
+							if(app.defineSeTarefaCritica(numberCreatedTasks) == Boolean.TRUE) {
+								newTask = new Task("Task-" + numberCreatedTasks, listOfIoTDevices[i].getId(), 
+													app.getDeadlineCriticas(), systemTime, app.getCargaComputacional(),
 													app.getEntradaDados(), app.getResultados());
 							}
 							else {
-								novaTarefa = new Task("Tarefa-" + tarefasCriadas, listaIoTDevices[i].getId(), -1, 
-													tempoSistema, app.getCargaComputacional(), app.getEntradaDados(), app.getResultados());
+								newTask = new Task("Task-" + numberCreatedTasks, listOfIoTDevices[i].getId(), -1, 
+													systemTime, app.getCargaComputacional(), app.getEntradaDados(), app.getResultados());
 							}
-							tarefasCriadas++;
+							numberCreatedTasks++;
 						}
 						else
 							break;
 						
 						// ---------------------------------------------------------------------------
-						// Início da alocação da tarefa
+						// 5.1. Start the scheduler and task allocation
 						// ---------------------------------------------------------------------------
 						
-						// Calcula os custos do sistema
-						Scheduler scheduler = new Scheduler(novaTarefa, fatorEnergia, fatorTempo, alpha, beta, gama);
+						// Computes allocation options costs for the task
+						Scheduler scheduler = new Scheduler(newTask, coefficientEnergy, coefficientTime, alpha, beta, gamma); 
 						//scheduler.imprimeCustos();
 						
-						// Verifica se o dispositivo IoT que gerou a tarefa está com a CPU livre
+						// Verify if the IoT device that created the task is with it's processing core available
 						boolean flagIoTDevice = Boolean.FALSE;
-						if(listaIoTDevices[i].verificaCPULivre() == Boolean.TRUE)
+						if(listOfIoTDevices[i].verificaCPULivre() == Boolean.TRUE)
 							flagIoTDevice = Boolean.TRUE;
 						
-						// Verifica se há alguma CPU livre nos servidores MEC
+						// Verify is there is an avaliable processing core in the MEC servers
 						boolean flagMECServer = Boolean.FALSE;
-						for(int j = 0; j < qtdeMECServers; j++) {
-							if(listaMECServers[j].verificaCPULivre() == Boolean.TRUE) {
+						for(int j = 0; j < numberMECServers; j++) {
+							if(listOfMECServers[j].verificaCPULivre() == Boolean.TRUE) {
 								flagMECServer = Boolean.TRUE;
 								break;
 							}
 						}
 							
-						// Busca menor custo para alocação da tarefa
+						// Searches for the smallest cost and then allocate the task
 						Octet<Double, Double, Double, Double, Double, Long, Double, Integer> octet;
 						octet = scheduler.defineMenorCusto(flagIoTDevice, flagMECServer);
 
-						// -----------------------------------------------------------------------------
-						// Atualiza energia e tempo de execução e política de escalonamento para a tarefa
-						// -----------------------------------------------------------------------------						
-						novaTarefa.setEnergiaExecucao(octet.getValue1());
-						novaTarefa.setEnergiaTransmissaoDados(octet.getValue2());
-						novaTarefa.setTempoExecucao(octet.getValue3());
-						novaTarefa.setTempoTransmissaoDados(octet.getValue4());
-						novaTarefa.setPolitica(octet.getValue7());
-						
-						
-						if(Boolean.FALSE) {
-						System.out.println(listaIoTDevices[i].getId() + " - Nível de bateria: " + listaIoTDevices[i].getNivelBateria() +
-											"; CPU Livre: " + listaIoTDevices[i].verificaCPULivre());
-						}
-						
-						// Ocupa os recursos de hardware
-						if(octet.getValue7() == POLITICA1) {
-							listaIoTDevices[i].alteraStatusCPU(CPU_OCUPADA);
-							listaIoTDevices[i].consomeBateria(octet.getValue1() + octet.getValue2());
-						} else if(octet.getValue7() == POLITICA2) {
-							for(int j = 0; j < qtdeMECServers; j++) {
-								if(listaMECServers[j].verificaCPULivre() == Boolean.TRUE) {
-									listaMECServers[j].OcupaCPU();
+						// Occupy hardware resources
+						if(octet.getValue7() == POLICY1_IOT) {
+							listOfIoTDevices[i].alteraStatusCPU(CORE_OCCUPIED);
+							listOfIoTDevices[i].consomeBateria(octet.getValue1() + octet.getValue2());
+						} else if(octet.getValue7() == POLICY2_MEC) {
+							for(int j = 0; j < numberMECServers; j++) {
+								if(listOfMECServers[j].verificaCPULivre() == Boolean.TRUE) {
+									listOfMECServers[j].OcupaCPU();
 									break;
 								}
 							}
-						}					
+						}
 						
-						// Tarefa alocada. Segue para monitoramente na lista de tarefas em andamento
-						listaTarefasAndamento.add(novaTarefa);
+						// -----------------------------------------------------------------------------
+						// 5.2. Updates energy consumed, elapsed time and allocation policy for the task
+						// -----------------------------------------------------------------------------						
+						newTask.setEnergiaExecucao(octet.getValue1());
+						newTask.setEnergiaTransmissaoDados(octet.getValue2());
+						newTask.setTempoExecucao(octet.getValue3());
+						newTask.setTempoTransmissaoDados(octet.getValue4());
+						newTask.setPolitica(octet.getValue7());
 						
-						// Imprime a quantidade de CPUs ocupadas nos servidores MEC
 						if(Boolean.FALSE) {
-							System.out.println(novaTarefa.getIdTarefa() + " criada; Tempo Sistema: " + tempoSistema);
-							for(int j = 0; j < qtdeMECServers; j++) {
-								int qtde = listaMECServers[j].getQuantidadeCPUsLivres();
-								System.out.println(listaMECServers[j].getId() + " com " + qtde + " CPUs livres; Tempo Sistema: " + tempoSistema);
+							printMessageOnConsole(listOfIoTDevices[i].getId() + " - Battery Level: " + 
+									listOfIoTDevices[i].getNivelBateria() + "; CORE Free: " + 
+									listOfIoTDevices[i].verificaCPULivre());
+						}
+											
+						
+						// -----------------------------------------------------------------------------
+						// 5.3. Task is allocated. Add task in the monitoring list. Start new iteration
+						// -----------------------------------------------------------------------------
+						listRunningTasks.add(newTask);
+						
+						if(Boolean.FALSE) {
+							// Print the number of occupied CPU cores in the MEC servers
+							printMessageOnConsole(newTask.getIdTarefa() + " created; System time: " + systemTime);
+							for(int j = 0; j < numberMECServers; j++) {
+								int qtde = listOfMECServers[j].getQuantidadeCPUsLivres();
+								printMessageOnConsole(listOfMECServers[j].getId() + " with " + qtde + " free CPU cores; System time: " + systemTime);
 							}
 						}
 						
 						// ---------------------------------------------------------------------------
-						// Fim da alocação da tarefa
+						// Iteration end - Go back to 5.
 						// ---------------------------------------------------------------------------
 					}
 				}
 				
 				// ---------------------------------------------------------------------------
-				// Início da verificação para finalização de tarefas
+				// 6. Verify if tasks are finished
 				// ---------------------------------------------------------------------------
-				
-				// Verifica se há alguma tarefa recém finalizada
-				if(!listaTarefasAndamento.isEmpty()) {
-					List<Task> listaTarefasAndamentoAux = new ArrayList<Task>();
-					listaTarefasAndamentoAux.addAll(listaTarefasAndamento);
-					for(Task aux : listaTarefasAndamentoAux) {
+				if(!listRunningTasks.isEmpty()) {
+					List<Task> listRunningTasksAux = new ArrayList<Task>();
+					listRunningTasksAux.addAll(listRunningTasks);
+					for(Task aux : listRunningTasksAux) {
 						Task task = aux;
 						
-						if(task.verificaSeTarefaDeveFinalizar(tempoSistema) == Boolean.TRUE) {
-							listaTarefasFinalizadas[tarefasCanceladasEConcluidas] = task;
-							tarefasCanceladasEConcluidas++;
-							listaTarefasAndamento.remove(aux);
+						if(task.verificaSeTarefaDeveFinalizar(systemTime) == Boolean.TRUE) {
+							listFinishedTasks[numberTasksCanceledAndConcluded] = task;
+							numberTasksCanceledAndConcluded++;
+							listRunningTasks.remove(aux);
 							
-							// Liberar recursos
-							if(task.getPolitica() == POLITICA1) {
+							// ---------------------------------------------------------------------------
+							// 6.1. Free resources 
+							// ---------------------------------------------------------------------------
+							if(task.getPolitica() == POLICY1_IOT) {
 								int id = Integer.parseInt(task.getIdDeviceGerador().split("-")[1]);
-								listaIoTDevices[id].alteraStatusCPU(CPU_LIVRE);
+								listOfIoTDevices[id].alteraStatusCPU(CORE_FREE);
 							}
-							if(task.getPolitica() == POLITICA2) {
-								for(int j = 0; j < qtdeMECServers; j++) {
-									if(listaMECServers[j].LiberaCPU() == Boolean.TRUE)
+							if(task.getPolitica() == POLICY2_MEC) {
+								for(int j = 0; j < numberMECServers; j++) {
+									if(listOfMECServers[j].LiberaCPU() == Boolean.TRUE)
 										break;
 								}
 							}
 								
-							//System.out.println(aux.getIdTarefa() + " finalizada; Tempo Sistema: " + tempoSistema);
 							if(Boolean.TRUE) {
-								if( tarefasCanceladasEConcluidas % 100 == 0 )
-									System.out.println("Qtde tarefas concluídas: " + tarefasCanceladasEConcluidas);
+								if(numberTasksCanceledAndConcluded % 100 == 0) // Restrict prints
+									printMessageOnConsole("Number of tasks concluded: " + numberTasksCanceledAndConcluded);
 							}
 						}
-						
-						//System.out.println("Tarefas Finalizadas: " + tarefasCanceladasEConcluidas);
 					}
 				}
 				
-				
-				// Verifica se todas as tarefas foram concluídas ou canceladas
-				if(tarefasCanceladasEConcluidas == qtdeTarefas) {
-					
+				// ---------------------------------------------------------------------------
+				// 7. Verify if all tasks are concluded or canceled
+				// ---------------------------------------------------------------------------
+				if(numberTasksCanceledAndConcluded == numberTasks) {
 					if(Boolean.FALSE) {
-						for(int j = 0; j < qtdeTarefas; j++) {
-							System.out.println(listaTarefasFinalizadas[j].getIdTarefa() + "; Energia: " + listaTarefasFinalizadas[j].getEnergiaTotalConsumida());
+						for(int j = 0; j < numberTasks; j++) {
+							System.out.println(listFinishedTasks[j].getIdTarefa() + "; Energia: " + listFinishedTasks[j].getEnergiaTotalConsumida());
 						}
 					}
-					break; // Finaliza a rodada de simulação
+					break; // Finishes simulation round
 				}
-				
-				// ---------------------------------------------------------------------------
-				// Fim da verificação para finalização de tarefas
-				// ---------------------------------------------------------------------------
-				
-				
-				// Atualiza tempo do sistema (avança 1 micro segundo)
-				tempoSistema++;
+								
+				// Updates system time - advances 1 micro second in time
+				systemTime++; 
 			}	
 			
 			// ---------------------------------------------------------------------------
-			// Estatísticas
+			// Simulation round ended - Print results for analysis
 			// ---------------------------------------------------------------------------
-			
-			/* Formato dos arquivos de execução:
-			 * 
-			 * 1. Cenário de testes de variação de carga computacional
-			 * [númeroCenário-qtdeTarefas-qtdeIoTDevices-qtdeMECServers-tamanhoCargaComputacional-tipoInformacao]
-			 * Ex.: 01-500-100-1-2000000000-imprimeTempoFinalizacaoVsPoliticaVsFinalizacao.txt
-			 * 
-			 * */
-			
 			if(Boolean.TRUE) {
-				// Imprime dados para testes de carga computacional
-				String filename = "01-" + qtdeTarefas + "-" + qtdeIoTDevices + "-" + qtdeMECServers + "-" + (long) app.getCargaComputacional();
-				imprimeTempoFinalizacaoVsPoliticaVsFinalizacao(filename, listaTarefasFinalizadas, fatorEnergia, fatorTempo);
+				String filename = "01-" + numberTasks + "-" + numberIoTDevices + "-" + numberMECServers + "-" + (long) app.getCargaComputacional();
+				String testType = "LoadVariation";
+				printSimulationLog(filename, listFinishedTasks, coefficientEnergy, coefficientTime, testType);
 			}
-
-			/*			
-			System.out.println("================================================================");
-			System.out.println("==== Parâmetros Simulação ====");
-			System.out.println("================================================================");
-			System.out.println("Qtde tarefas: " + qtdeTarefas);
-			System.out.println("Qtde IoT Devices: " + qtdeIoTDevices);
-			System.out.println("Qtde MEC Servers: " + qtdeMECServers);
-			System.out.println("Qtde Data Centers: " + qtdeDataCenters);
-			System.out.println("================================================================");
-			System.out.println("==== Parâmetros Aplicação ====");
-			System.out.println("================================================================");
-			System.out.println("Aplicação: " + app.getId());
-			System.out.println("Taxa de geração: " + app.getTaxaGeracao() + " micro segundos");
-			System.out.println("Entrada de dados: " + app.getEntradaDados() + " bits");
-			System.out.println("Carga computacional: " + app.getCargaComputacional() + " ciclos de CPU");
-			System.out.println("Deadline críticas: " + app.getDeadlineCriticas() + " micro segundos");
-			System.out.println("Percentual críticas: " + app.percentualCriticas()*100 + "%");
-			System.out.println("================================================================");
-			System.out.println("==== Estatísticas simulação ====");
-			System.out.println("================================================================");
-			System.out.println("Tempo da simulação: " + tempoSistema + " micro segundos");
-			
-			int [] cont = new int[3];
-			for(int j = 0; j < qtdeTarefas; j++) {
-				if(listaTarefasFinalizadas[j].getPolitica() == POLITICA1)
-					cont[0]++;
-				if(listaTarefasFinalizadas[j].getPolitica() == POLITICA2)
-					cont[1]++;
-				if(listaTarefasFinalizadas[j].getPolitica() == POLITICA3)
-					cont[2]++;
-			}
-			System.out.println(cont[0] + " tarefas executadas localmente, no dispositivo local");
-			System.out.println(cont[1] + " tarefas executadas localmente, no servidor local");
-			System.out.println(cont[2] + " tarefas executadas remotamente, na Cloud");
-			System.out.println("================================================================");
-			System.out.println("==== Dispositivos IoT ====");
-			System.out.println("================================================================");
-			for(int j = 0; j < qtdeIoTDevices; j++) {
-				System.out.println(listaIoTDevices[j].getId() + " - Nível de bateria: " + listaIoTDevices[j].getNivelBateria());
-			}
-			
-			System.out.println("================================================================");
-			System.out.println("==== Tarefas ====");
-			System.out.println("================================================================");
-			int aux = 0;
-			for(int j = 0; j < qtdeTarefas; j++) {
-				if(listaTarefasFinalizadas[j].getDeadline() == -1)
-					aux++;
-			}
-			
-			System.out.println("Qtde tarefas normais: " + aux);
-			System.out.println("Qtde tarefas crítica: " + (qtdeTarefas-aux));
-			aux = 0;
-			for(int j = 0; j < qtdeTarefas; j++) {
-				if(listaTarefasFinalizadas[j].getStatusTarefa() == TAREFA_CONCLUIDA)
-					aux++;
-			}
-			System.out.println("Qtde tarefas concluídas: " + aux);
-			System.out.println("Qtde tarefas canceladas: " + (qtdeTarefas-aux));
-			System.out.println("================================================================");
-			System.out.println("==== Energia e Tempo ====");
-			System.out.println("================================================================");
-			System.out.println("Energia total consumida");
-			System.out.println("Tempo médio de execução");
-			
-			if(Boolean.FALSE)
-				System.exit(0);
-			*/
-			//System.exit(0);
 		}
 		}
 		}
@@ -383,51 +293,48 @@ public class SimulatorExecution {
 	}
 	
 	
-	/* Impressão de dados */
-	
-	/* Imprime no arquivo a tupla 
-	 * [Tempo; Política; Status Finalização, Energia CPU, Energia transmissão, Tempo CPU, Tempo transmissão, Custo]
-	 * 
-	 * 0 Tempo 							: É o tempo no qual a tarefa foi encerrada no sistema.
-	 * 1 Política 						: É a política de alocação escolhida. Pode ser 1, 2 ou 3.
-	 * 2 Status Finalização				: É o status de finalização da tarefa. Pode ser status concluído ou cancelado. 
-	 * 3 Energia CPU					: Energia dinâmica consumida para execução na CPU
-	 * 4 Energia transmissão de dados	: Energia consumida para realizar as transmissões de dados
-	 * 5 Tempo Execução CPU				: Tempo de execução para processamento na CPU
-	 * 6 Tempo transmissão de dados		: Tempo decorrido nas transmissões de dados 
-	 * 7 Custo							: Custo
+	/* Print message on console
 	 * 
 	 * */
-	public static void imprimeTempoFinalizacaoVsPoliticaVsFinalizacao(String filename, Task[] tarefasFinalizadas, 
-			double fatorEnergia, double fatorTempo) throws IOException {
+	public static void printMessageOnConsole(String message) {
+		System.out.println(message);
+	}
+	
 		
-		String tipoTeste = "imprimeTempoFinalizacaoVsPoliticaVsFinalizacao.txt";
-		filename = filename + "-" + tipoTeste;
+	/* Print simulation log for analysis
+	 * 
+	 * TODO 
+	 * 
+	 * */
+	public static void printSimulationLog(String filename, Task[] tarefasFinalizadas, 
+			double fatorEnergia, double fatorTempo, String testType) throws IOException {
+		
+		filename = filename + "-" + testType + ".txt";
 		
 		// Octet<Tempo; Política; Status Finalização, Energia CPU, Energia transmissão, Tempo CPU, Tempo transmissão, Custo>
 		List<Octet<Long, String, String, Long, Long, Long, Long, Long>> listOctet = 
 				new ArrayList<Octet<Long, String, String, Long, Long, Long, Long, Long>>();
 		
 		for(int i = 0; i < tarefasFinalizadas.length; i++) {
-			String politica;
-			if(tarefasFinalizadas[i].getPolitica() == POLITICA1)
-				politica = "POLITICA1";
-			else if(tarefasFinalizadas[i].getPolitica() == POLITICA2)
-				politica = "POLITICA2";
+			String policy;
+			if(tarefasFinalizadas[i].getPolitica() == POLICY1_IOT)
+				policy = "POLICY1_IOT";
+			else if(tarefasFinalizadas[i].getPolitica() == POLICY2_MEC)
+				policy = "POLICY2_MEC";
 			else
-				politica = "POLITICA3";
+				policy = "POLICY3_CLOUD";
 			
 			String statusFinalizacao;
-			if(tarefasFinalizadas[i].getStatusTarefa() == TAREFA_CONCLUIDA)
-				statusFinalizacao = "TAREFA_CONCLUIDA";
+			if(tarefasFinalizadas[i].getStatusTarefa() == TASK_CONCLUDED)
+				statusFinalizacao = "TASK_CONCLUDED";
 			else
-				statusFinalizacao = "TAREFA_CANCELADA";
+				statusFinalizacao = "TASK_CANCELED";
 			
 			Octet<Long, String, String, Long, Long, Long, Long, Long> octet = 
 					new Octet<Long, String, String, Long, Long, Long, Long, Long>
 					( 
 						(long) (tarefasFinalizadas[i].getTempoBase() + tarefasFinalizadas[i].getTempoTotalDecorrido()),
-						politica, 
+						policy, 
 						statusFinalizacao, 
 						(long) tarefasFinalizadas[i].getEnergiaExecucao(), 
 						(long) tarefasFinalizadas[i].getEnergiaTransmissaoDados(), 
@@ -439,7 +346,7 @@ public class SimulatorExecution {
 			listOctet.add(octet);
 		}
 		
-		// Ordena a lista de tuplas pelo tempo de finalização das tarefas
+		// Order tuple list by the tasks finalization time
 		listOctet.sort(null);
 		
 		String header = "Tempo;Politica;Status Finalizacao;Energia CPU;Energia Transmissoes;Tempo CPU;Tempo Transmissoes;Custo\n";
@@ -447,16 +354,17 @@ public class SimulatorExecution {
 	}
 	
 	
-	/* Imprime Octeto
+	/* Print Octet
+	 * [Time; Policy; Finalization Status, Energy CPU core, Energy data transmission, Time CPU core, Time data transmission	, Cost]
 	 * 
-	 * 0 Tempo 							: É o tempo no qual a tarefa foi encerrada no sistema.
-	 * 1 Política 						: É a política de alocação escolhida. Pode ser 1, 2 ou 3.
-	 * 2 Status Finalização				: É o status de finalização da tarefa. Pode ser status concluído ou cancelado. 
-	 * 3 Energia CPU					: Energia dinâmica consumida para execução na CPU
-	 * 4 Energia transmissão de dados	: Energia consumida para realizar as transmissões de dados
-	 * 5 Tempo Execução CPU				: Tempo de execução para processamento na CPU
-	 * 6 Tempo transmissão de dados		: Tempo decorrido nas transmissões de dados 
-	 * 7 Custo							: Custo
+	 * 0 Time 							: Time in which the task was ended in the system.
+	 * 1 Policy 						: Chosen allocation option/policy. Can be 1 (IoT, 2 (MEC) or 3 (Cloud).
+	 * 2 Finalization Status			: Task finalization status. Can be concluded or canceled. 
+	 * 3 Energy CPU core				: Dynamic energy consumed by the CPU core during execution.
+	 * 4 Energy data transmission 		: Consumed energy for data transmissions
+	 * 5 Time CPU core					: Elapsed time when executing the task in the CPU core
+	 * 6 Time data transmission			: Elapsed time for data transmissions 
+	 * 7 Cost							: Cost
 	 * 
 	 * */
 	public static void imprimeOctetoParaArquivo(String filename, String header, 
