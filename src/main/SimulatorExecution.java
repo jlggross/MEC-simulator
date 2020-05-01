@@ -167,7 +167,7 @@ public class SimulatorExecution {
 						// Verify is there is an avaliable processing core in the MEC servers
 						boolean flagMECServer = Boolean.FALSE;
 						for(int j = 0; j < numberMECServers; j++) {
-							if(listOfMECServers[j].verificaCPULivre() == Boolean.TRUE) {
+							if(listOfMECServers[j].verifyCPUFree() == Boolean.TRUE) {
 								flagMECServer = Boolean.TRUE;
 								break;
 							}
@@ -175,7 +175,7 @@ public class SimulatorExecution {
 							
 						// Searches for the smallest cost and then allocate the task
 						Octet<Double, Double, Double, Double, Double, Long, Double, Integer> octet;
-						octet = scheduler.defineMenorCusto(flagIoTDevice, flagMECServer);
+						octet = scheduler.defineAllocationPolicy(flagIoTDevice, flagMECServer);
 
 						// Occupy hardware resources
 						if(octet.getValue7() == POLICY1_IOT) {
@@ -183,8 +183,8 @@ public class SimulatorExecution {
 							listOfIoTDevices[i].consumeBaterry(octet.getValue1() + octet.getValue2());
 						} else if(octet.getValue7() == POLICY2_MEC) {
 							for(int j = 0; j < numberMECServers; j++) {
-								if(listOfMECServers[j].verificaCPULivre() == Boolean.TRUE) {
-									listOfMECServers[j].OcupaCPU();
+								if(listOfMECServers[j].verifyCPUFree() == Boolean.TRUE) {
+									listOfMECServers[j].ocuppyCPU();
 									break;
 								}
 							}
@@ -215,7 +215,7 @@ public class SimulatorExecution {
 							// Print the number of occupied CPU cores in the MEC servers
 							printMessageOnConsole(newTask.getIdTarefa() + " created; System time: " + systemTime);
 							for(int j = 0; j < numberMECServers; j++) {
-								int qtde = listOfMECServers[j].getQuantidadeCPUsLivres();
+								int qtde = listOfMECServers[j].getNumberOfFreeCPUs();
 								printMessageOnConsole(listOfMECServers[j].getId() + " with " + qtde + " free CPU cores; System time: " + systemTime);
 							}
 						}
@@ -249,7 +249,7 @@ public class SimulatorExecution {
 							}
 							if(task.getPolitica() == POLICY2_MEC) {
 								for(int j = 0; j < numberMECServers; j++) {
-									if(listOfMECServers[j].LiberaCPU() == Boolean.TRUE)
+									if(listOfMECServers[j].freeCPU() == Boolean.TRUE)
 										break;
 								}
 							}

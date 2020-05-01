@@ -35,9 +35,9 @@ public class CloudDataCenter {
 	/* Calculate dynamic energy for the standard operating frequency
 	 * 
 	 * */
-	public double calculateDynamicEnergyStandardFreq(long computacionalLoad) {
+	public double calculateDynamicEnergyStandardFreq(long computationalLoad) {
 		double energyDynamic;
-		energyDynamic = 13.85 * calculateExecutionTimeStardardFreq(computacionalLoad); // In W * micro-second	
+		energyDynamic = 13.85 * calculateExecutionTimeStardardFreq(computationalLoad); // In W * micro-second	
 		return energyDynamic;
 	}
 	
@@ -45,9 +45,9 @@ public class CloudDataCenter {
 	/* Calculate dynamic energy for turbo boost frequency
 	 * 
 	 * */
-	public double calculateDynamicEnergyTurboFreq(long computacionalLoad) {
+	public double calculateDynamicEnergyTurboFreq(long computationalLoad) {
 		double energyDynamic;
-		energyDynamic = 24.28 * calculaTempoExecucaoFreqTurboBoost(computacionalLoad); // In W * micro-second	
+		energyDynamic = 24.28 * calculaTempoExecucaoFreqTurboBoost(computationalLoad); // In W * micro-second	
 		return energyDynamic;
 	}
 	
@@ -55,9 +55,9 @@ public class CloudDataCenter {
 	/* Calculate execution time for standard frequency
 	 * 
 	 * */
-	public double calculateExecutionTimeStardardFreq(long computacionalLoad) {
+	public double calculateExecutionTimeStardardFreq(long computationalLoad) {
 		double time;
-		time = (double) computacionalLoad / (double) this.standardFrequency;	// In seconds
+		time = (double) computationalLoad / (double) this.standardFrequency;	// In seconds
 		time = time * Math.pow(10, 6); // In micro seconds
 		return time;
 	}
@@ -66,9 +66,9 @@ public class CloudDataCenter {
 	/* Calculate execution time for turbo boost frequency
 	 * 
 	 * */
-	public double calculaTempoExecucaoFreqTurboBoost(long computacionalLoad) {
+	public double calculaTempoExecucaoFreqTurboBoost(long computationalLoad) {
 		double time;
-		time = (double) computacionalLoad / (double) this.turboBoostFrequency; // In seconds	
+		time = (double) computationalLoad / (double) this.turboBoostFrequency; // In seconds	
 		time = time * Math.pow(10, 6); // In micro seconds
 		return time;
 	}

@@ -7,35 +7,35 @@ import org.javatuples.Pair;
 
 public class MECServer {
 
-	private List<Pair<Long, Double>> paresFreqTensao = new ArrayList<Pair<Long, Double>>();
+	private List<Pair<Long, Double>> pairsFrequencyVoltage = new ArrayList<Pair<Long, Double>>();
 
-	private String id;					// Identificação do nodo
-	private double capacitancia; 		// Capacitância da arquitetura
-	private double potenciaIdle;		// Potência da CPU em idle	
+	private String id;					
+	private double capacitance; 		// Chipset capacitance
+	private double powerIdle;				
 
-	private List<Boolean> statusCPUs = new ArrayList<Boolean>();	// 20 CPUs
-	private static boolean CPU_OCUPADA = Boolean.TRUE;
-	private static boolean CPU_LIVRE = Boolean.FALSE;
+	private List<Boolean> statusCPUs = new ArrayList<Boolean>();	// 20 CPU cores
+	private static boolean CPU_OCCUPIED = Boolean.TRUE;
+	private static boolean CPU_FREE = Boolean.FALSE;
 	
 	private static int MAX_CPUS = 20;
 	
-	/* Construtor
+	/* Constructor
 	 * 
 	 * */
 	public MECServer(String id) {
 		this.id = id;
-		this.capacitancia = (double) (1.8 * Math.pow(10, -9)); // Em Farads
-		this.potenciaIdle = (double) (0.675); // Em W
+		this.capacitance = (double) (1.8 * Math.pow(10, -9)); // In Farads
+		this.powerIdle = (double) (0.675); // In W
 		
-		// Frequências de operação do Raspberry Pi 4 Model B		
-		this.paresFreqTensao.add(new Pair<Long, Double> ((long) (600 * Math.pow(10, 6)), 0.8));
-		this.paresFreqTensao.add(new Pair<Long, Double> ((long) (750 * Math.pow(10, 6)), 0.825));
-		this.paresFreqTensao.add(new Pair<Long, Double> ((long) (1000 * Math.pow(10, 6)), 1.0));
-		this.paresFreqTensao.add(new Pair<Long, Double> ((long) (1500 * Math.pow(10, 6)), 1.2));
+		// Operating frequencies for Raspberry Pi 4 Model B		
+		this.pairsFrequencyVoltage.add(new Pair<Long, Double> ((long) (600 * Math.pow(10, 6)), 0.8));
+		this.pairsFrequencyVoltage.add(new Pair<Long, Double> ((long) (750 * Math.pow(10, 6)), 0.825));
+		this.pairsFrequencyVoltage.add(new Pair<Long, Double> ((long) (1000 * Math.pow(10, 6)), 1.0));
+		this.pairsFrequencyVoltage.add(new Pair<Long, Double> ((long) (1500 * Math.pow(10, 6)), 1.2));
 		
-		// Status das 20 CPUs do servidor MEC
+		// Status of all CPU cores from the NEC server
 		for(int i = 0; i < MAX_CPUS; i++)
-			statusCPUs.add(CPU_LIVRE);
+			statusCPUs.add(CPU_FREE);
 	}
 	
 	
@@ -44,14 +44,14 @@ public class MECServer {
 		return id;
 	}
 	
-	public List<Pair<Long, Double>> getParesFreqTensao() {
-		return paresFreqTensao;
+	public List<Pair<Long, Double>> getPairsFrenquecyVoltage() {
+		return pairsFrequencyVoltage;
 	}	
 
-	public int getQuantidadeCPUsLivres() {
+	public int getNumberOfFreeCPUs() {
 		int cont = 0;
 		for(int i = 0; i < MAX_CPUS; i++) {
-			if(statusCPUs.get(i) == CPU_LIVRE)
+			if(statusCPUs.get(i) == CPU_FREE)
 				cont++;
 		}
 		
@@ -60,89 +60,88 @@ public class MECServer {
 	
 	
 	
-	/* Calcula potência dinâmica da CPU do servidor
+	/* Calculate dynamic power of a CPU core from the MEC server
 	 * 
-	 * Retorno: Em Watts
+	 * Return: In Watts
 	 * */
-	public double calculaPotenciaDinamica(long frequenciaOperacao, double tensao) {
-		double potencia;
-		potencia = (double) (this.capacitancia * Math.pow(tensao, 2) * (double) frequenciaOperacao); // Em W		
-		return potencia;
+	public double calculateDynamicPower(long operatingFrequency, double voltage) {
+		double power;
+		power = (double) (this.capacitance * Math.pow(voltage, 2) * (double) operatingFrequency); // In W		
+		return power;
 	}
 	
 	
-	/* Calcula tempo de execução
+	/* Calculate execution time
 	 * 
-	 * Retorno: Em micro segundos
+	 * Return: In micro seconds
 	 * */
-	public double calculaTempoExecucao(long frequenciaOperacao, long cargaComputacional) {
-		double tempo;
-		tempo = (double) cargaComputacional / (double) frequenciaOperacao; // Resultado em segundos
-		tempo = tempo * Math.pow(10, 6); // Resultado em micro segundos
-		return tempo;
+	public double calculateExecutionTime(long operatingFrequency, long computationalLoad) {
+		double time;
+		time = (double) computationalLoad / (double) operatingFrequency; // In seconds
+		time = time * Math.pow(10, 6); // In micro seconds
+		return time;
 	}
 	
 	
-	/* Calcula energia consumida
+	/* Calculate consumed energy
 	 * 
-	 * Retorno: Em W * micro-segundos
+	 * Return: In W * micro-seconds
 	 * */
-	public double calculaEnergiaDinamicaConsumida(long frequenciaOperacao, double tensao, long cargaComputacional) {
-		double energia;
-		energia = this.calculaPotenciaDinamica(frequenciaOperacao, tensao) * this.calculaTempoExecucao(frequenciaOperacao, cargaComputacional); // Resultado em W * micro-segundo
-		return energia;
+	public double calculateDynamicEnergyConsumed(long operatingFrequency, double voltage, long computationalLoad) {
+		double energy;
+		energy = this.calculateDynamicPower(operatingFrequency, voltage) * 
+				this.calculateExecutionTime(operatingFrequency, computationalLoad); // In W * micro-seconds
+		return energy;
 	}	
 	
 	
-	/* Verifica se há CPU livre
-	 * - Retorna TRUE se houver uma CPU livre
-	 * - Retorna FALSE se todas as CPUs estiverem ocupadas
+	/* Verify if there is a free CPU core
+	 * - Return TRUE if there is a free CPU core
+	 * - Return FALSE if all CPU cores are occupied
 	 * */
-	public boolean verificaCPULivre() {
+	public boolean verifyCPUFree() {
 		for(boolean status : statusCPUs) {
-			if(status == CPU_LIVRE)
+			if(status == CPU_FREE)
 				return Boolean.TRUE;
 		}
-
-		//System.out.println(id + "-verificaCPULivre() : Nenhuma CPUs livre.");
 		return Boolean.FALSE;
 	}
 	
 	
-	/* Ocupa CPU para processar tarefa
-	 * - Returna TRUE se a CPU foi ocupada
-	 * - Retorna FALSE se todas as CPUs estão ocupadas
+	/* Occupy CPU to process task
+	 * - Return TRUE if a CPU core has been occupied
+	 * - Return FALSE if all CPU cores are already occupied
 	 * */
-	public boolean OcupaCPU() {
-		if(this.verificaCPULivre() == Boolean.TRUE) {
+	public boolean ocuppyCPU() {
+		if(this.verifyCPUFree() == Boolean.TRUE) {
 			for(int i = 0; i < MAX_CPUS; i++) {
-				if(statusCPUs.get(i) == CPU_LIVRE) {
+				if(statusCPUs.get(i) == CPU_FREE) {
 					statusCPUs.remove(i);
-					statusCPUs.add(CPU_OCUPADA);
+					statusCPUs.add(CPU_OCCUPIED);
 					return Boolean.TRUE;
 				}
 			}
 		}
 		
-		System.out.println(id + "-OcupaCPU() : Todas CPUs já estão ocupadas.");
+		System.out.println(id + "-occupyCPU() : All CPU cores are already occupied.");
 		return Boolean.FALSE;
 	}
 	
 	
-	/* Libera CPU para uso. Deixa recurso disponível
-	 * - Returna TRUE indicando que a CPU ocupada foi liberada
-	 * - Retorna FALSE se todas as CPUs já estão livres
+	/* Free CPU core for future usage. Resource is made available.
+	 * - Return TRUE if the occupied CPU core is now free
+	 * - Return FALSE if all CPU cores are already free
 	 * */
-	public boolean LiberaCPU() {
+	public boolean freeCPU() {
 		for(int i = 0; i < MAX_CPUS; i++) {
-			if(statusCPUs.get(i) == CPU_OCUPADA) {
+			if(statusCPUs.get(i) == CPU_OCCUPIED) {
 				statusCPUs.remove(i);
-				statusCPUs.add(CPU_LIVRE);
+				statusCPUs.add(CPU_FREE);
 				return Boolean.TRUE;
 			}
 		}	
 		
-		System.out.println(id + "-LiberaCPU() : Todas CPUs já estão livres.");
+		System.out.println(id + "-freeCPU() : All CPU cores are alerady free.");
 		return Boolean.FALSE;
 	}
 }

@@ -3,59 +3,59 @@ package main;
 public class Task {
 
 	// Variáveis fixas
-	private String idTarefa;			// Nome da tarefa
-	private String idDevice;			// Origem da criação da tarefa
-	private long deadline;				// Em micro segundos
-										/* Se a tarefa não for crítica, então o deadline é -1 */
-	private long tempoBase;				/* Tempo no sistema no qual a tarefa foi criada. 
-	 									Importante considerar essa marcação de tempo para
-	 									criação da tarefa para ir verificando o deadline.*/
+	private String idTask;			
+	private String idDevice;			// IoT Device that created the task
+	private long deadline;				// In micro seconds
+										/* If task is non-critical, then the deadline is -1 */
+	private long baseTime;				/* System time when the task was created. 
+	 									It is important to check this time stamp and compare it to the
+	 									deadline while processing the task. */
 
-	private long cargaComputacional; 	// Em ciclos de CPU
-	private long tamanhoEntrada;		// Em bits
-	private long tamanhoRetorno;		// Em bits
+	private long computationalLoad; 	// In CPU cycles
+	private long dataEntrySize;			// In bits
+	private long returnDataSize;		// In bits
 	
-	private double energiaExecucao;			// Em W*micro-segundo		
-	private double energiaTransmissaoDados;	// Em W*micro-segundo
-	private long tempoExecucao;				// Em micro segundos
-	private long tempoTransmissaoDados;		// Em micro segundos
+	private double energyExecution;		// In W*micro-seconds		
+	private double energyTransfer;		// In W*micro-seconds
+	private long timeExecution;			// In micro seconds
+	private long timeTransfer;			// In micro seconds
 	
-	private static int TAREFA_VIVA = 1; 		// Em processo de alocação ou em execução
-	private static int TAREFA_CONCLUIDA = 2;	// Concluída. Se tarefa com deadline, terminou antes do deadline
-	private static int TAREFA_CANCELADA = 3;	// Cancelada. Dispositivo ficou sem bateria ou tarefa finalizou depois do deadline
-	private int statusTarefa;		
+	private static int TASK_ALIVE = 1; 		// Task being allocated and executed
+	private static int TASK_CONCLUDED = 2;	// Concluída. Se tarefa com deadline, terminou antes do deadline
+	private static int TASK_CALCELLED = 3;	// Cancelada. Dispositivo ficou sem bateria ou tarefa finalizou depois do deadline
+	private int taskStatus;		
 	
-	private static int POLITICA1 = 1;
-	private static int POLITICA2 = 2;
-	private static int POLITICA3 = 3;
-	private int politica; 				// Indica qual a politica de escalonamento adotada
+	private static int POLICY1_IOT = 1;
+	private static int POLICY2_MEC = 2;
+	private static int POLICY3_CLOUD = 3;
+	private int policy; 				// Indica qual a politica de escalonamento adotada
 										/* Setado na fase de escalonamento, durante a simulação.
 										 * Pode conter os valores 1, 2 e 3, para processamento local no device,
 										 * processamento local no servidor MEC ou processamento remoto na Cloud. */
 	
-	/* Construtor
+	/* Constructor
 	 * 
 	 * */
 	public Task(String idTarefa, String idDevice, long deadline, long tempoBase, long cargaComputacional, long tamanhoEntrada, long tamanhoRetorno) {
-		this.idTarefa = idTarefa;
+		this.idTask = idTarefa;
 		this.idDevice = idDevice;
 		this.deadline = deadline;
-		this.tempoBase = tempoBase;
-		this.cargaComputacional = cargaComputacional;
-		this.tamanhoEntrada = tamanhoEntrada;
-		this.tamanhoRetorno = tamanhoRetorno;
+		this.baseTime = tempoBase;
+		this.computationalLoad = cargaComputacional;
+		this.dataEntrySize = tamanhoEntrada;
+		this.returnDataSize = tamanhoRetorno;
 		
-		this.energiaExecucao = 0;
-		this.energiaTransmissaoDados = 0;
-		this.tempoExecucao = 0;
-		this.tempoTransmissaoDados = 0;
-		this.statusTarefa = TAREFA_VIVA;
+		this.energyExecution = 0;
+		this.energyTransfer = 0;
+		this.timeExecution = 0;
+		this.timeTransfer = 0;
+		this.taskStatus = TASK_ALIVE;
 	}
 	
 	
 	/* Getters */
 	public String getIdTarefa() {
-		return this.idTarefa;
+		return this.idTask;
 	}
 	
 	public String getIdDeviceGerador() {
@@ -63,7 +63,7 @@ public class Task {
 	}
 	
 	public int getStatusTarefa() {
-		return this.statusTarefa;
+		return this.taskStatus;
 	}
 	
 	public long getDeadline() {
@@ -71,38 +71,38 @@ public class Task {
 	}
 	
 	public long getTempoBase() {
-		return tempoBase;
+		return baseTime;
 	}
 	
 	public long getCargaComputacional() {
-		return cargaComputacional;
+		return computationalLoad;
 	}
 	
 	public long getTamanhoEntrada() {
-		return tamanhoEntrada;
+		return dataEntrySize;
 	}
 
 	public long getTamanhoRetorno() {
-		return tamanhoRetorno;
+		return returnDataSize;
 	}
 	
 	public int getPolitica() {
-		return politica;
+		return policy;
 	}
 	
 	/* Retorna energia total consumida pela tarefa
 	 * 
 	 * */
 	public double getEnergiaTotalConsumida() {
-		return this.energiaExecucao + this.energiaTransmissaoDados;
+		return this.energyExecution + this.energyTransfer;
 	}
 
 	public double getEnergiaExecucao() {
-		return energiaExecucao;
+		return energyExecution;
 	}
 	
 	public double getEnergiaTransmissaoDados() {
-		return energiaTransmissaoDados;
+		return energyTransfer;
 	}
 	
 	
@@ -110,25 +110,25 @@ public class Task {
 	 * 
 	 * */
 	public long getTempoTotalDecorrido() {
-		return this.tempoExecucao + this.tempoTransmissaoDados;
+		return this.timeExecution + this.timeTransfer;
 	}
 	
 	public long getTempoExecucao() {
-		return tempoExecucao;
+		return timeExecution;
 	}
 	
 	public long getTempoTransmissaoDados() {
-		return tempoTransmissaoDados;
+		return timeTransfer;
 	}
 
 	
 	/* Setters */
 	public void setEnergiaExecucao(double energiaExecucao) {
-		this.energiaExecucao = energiaExecucao;
+		this.energyExecution = energiaExecucao;
 	}
 
 	public void setEnergiaTransmissaoDados(double energiaTransmissaoDados) {
-		this.energiaTransmissaoDados = energiaTransmissaoDados;
+		this.energyTransfer = energiaTransmissaoDados;
 	}
 	
 	/* Indica quanto tempo a tarefa necessita desde a criação até a finalização, para
@@ -136,20 +136,20 @@ public class Task {
 	 * transmissão de dados
 	 * */
 	public void setTempoExecucao(double tempoExecucao) {
-		this.tempoExecucao = (long) tempoExecucao;
+		this.timeExecution = (long) tempoExecucao;
 	}
 	
 	public void setTempoTransmissaoDados(double tempoTransmissaoDados) {
-		this.tempoTransmissaoDados = (long) tempoTransmissaoDados;
+		this.timeTransfer = (long) tempoTransmissaoDados;
 	}
 	
 	public void setPolitica(int politica) {
-		if(politica != POLITICA1 && politica != POLITICA2 && politica != POLITICA3) {
+		if(politica != POLICY1_IOT && politica != POLICY2_MEC && politica != POLICY3_CLOUD) {
 			System.out.println(this.getIdTarefa() + " - setPolitica() : política de alocação diferente de 1, 2 ou 3");
 			System.exit(0);
 		}
 					
-		this.politica = politica;
+		this.policy = politica;
 	}
 	
 	
@@ -162,12 +162,12 @@ public class Task {
 	 * 
 	 * */
 	public boolean verificaSeTarefaDeveFinalizar(long tempoSistema) {
-		if(this.statusTarefa != TAREFA_VIVA) {
-			System.out.println("ERRO - função verificaSeTarefaDeveFinalizar : " + this.idTarefa + " já está finalizada");
+		if(this.taskStatus != TASK_ALIVE) {
+			System.out.println("ERRO - função verificaSeTarefaDeveFinalizar : " + this.idTask + " já está finalizada");
 			System.exit(0);
 		}
 		
-		long tempoParaFinalizacao = this.tempoBase + this.getTempoTotalDecorrido();
+		long tempoParaFinalizacao = this.baseTime + this.getTempoTotalDecorrido();
 		if(tempoParaFinalizacao == tempoSistema) {
 			this.finalizaTarefa(tempoSistema);
 			return Boolean.TRUE;
@@ -182,11 +182,11 @@ public class Task {
 	 * */
 	private void finalizaTarefa(long tempoSistema) {
 		if(this.deadline == -1)
-			this.statusTarefa = TAREFA_CONCLUIDA;
-		else if(tempoSistema < (this.tempoBase + this.deadline))
-			this.statusTarefa = TAREFA_CONCLUIDA;
+			this.taskStatus = TASK_CONCLUDED;
+		else if(tempoSistema < (this.baseTime + this.deadline))
+			this.taskStatus = TASK_CONCLUDED;
 		else {
-			this.statusTarefa = TAREFA_CANCELADA;
+			this.taskStatus = TASK_CALCELLED;
 		}
 	}
 	

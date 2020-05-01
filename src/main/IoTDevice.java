@@ -87,9 +87,9 @@ public class IoTDevice {
 	 * 
 	 * Return: In micro seconds
 	 * */
-	public double calculateExecutionTime(long operatingFrequency, long computacionalLoad) {
+	public double calculateExecutionTime(long operatingFrequency, long computationalLoad) {
 		double time;
-		time = (double) ((double) computacionalLoad / (double) operatingFrequency); // In seconds
+		time = (double) ((double) computationalLoad / (double) operatingFrequency); // In seconds
 		time = time * Math.pow(10, 6); // In micro seconds
 		return time;
 	}
@@ -99,10 +99,10 @@ public class IoTDevice {
 	 * 
 	 * Return: W * micro-second
 	 * */
-	public double calculateDynamicEnergyConsumed(long operatingFrequency, double voltage, long computacionalLoad) {
+	public double calculateDynamicEnergyConsumed(long operatingFrequency, double voltage, long computationalLoad) {
 		double energy;
 		energy = this.calculateDynamicPower(operatingFrequency, voltage) * 
-				this.calculateExecutionTime(operatingFrequency, computacionalLoad); // In W * micro-second
+				this.calculateExecutionTime(operatingFrequency, computationalLoad); // In W * micro-second
 		return energy;
 	}
 	

@@ -11,7 +11,7 @@ public class Application {
 	private long rateGeneration; 			// In micro seconds
 	private long dataEntrySize;				// In bits
 	private long resultsSize;				// In bits
-	private long computacionalLoad;			// In CPU cycles
+	private long computationalLoad;			// In CPU cycles
 	private double criticalTasksPercentage;	// In percentage (0 to 1)
 	private long ciriticalTasksDeadline;	// In micro seconds
 	private int numberOfTasks;				
@@ -20,14 +20,14 @@ public class Application {
 	 * 
 	 * */
 	public Application(String id, long rateGeneration, long dataEntrySize, long resultsSize, 
-			long computacionalLoad, double criticalTasksPercentage, long criticalTasksDeadline) {
+			long computationalLoad, double criticalTasksPercentage, long criticalTasksDeadline) {
 		
 		this.id = id;
 		
 		this.rateGeneration = rateGeneration;
 		this.dataEntrySize = dataEntrySize;
 		this.resultsSize = resultsSize;
-	    this.computacionalLoad = computacionalLoad;
+	    this.computationalLoad = computationalLoad;
 	    
 	    if(this.criticalTasksPercentage > 1 || this.criticalTasksPercentage < 0) {
 	    	System.out.println("App " + id + ": criticalTasksPercentage out of bounds");
@@ -70,7 +70,7 @@ public class Application {
 	}
 	
 	public long getComputationalLoad() {
-		return computacionalLoad;
+		return computationalLoad;
 	}
 	
 	

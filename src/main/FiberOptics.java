@@ -13,7 +13,7 @@ public class FiberOptics {
 	}
 
 	
-	/* Calculate data transmission time for 5G
+	/* Calculate data transmission time for fiber optics
 	 * - dataSize : In bits
 	 * 
 	 * Return: In micro seconds  

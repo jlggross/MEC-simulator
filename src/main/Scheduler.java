@@ -10,7 +10,7 @@ import org.javatuples.Septet;
 
 public class Scheduler {
 	
-	// Objetos
+	// Entities - just to access methods
 	private Task task;
 	private IoTDevice iotDevice;
 	private MECServer serverMEC;
@@ -18,64 +18,64 @@ public class Scheduler {
 	private RAN_5G transmission5G;
 	private FiberOptics transmissionFiber;
 	
-	// Fatores de custo
-	/* Estabelecem a relação de peso entre energia e tempo de processamento. 
-	 * O somatório de ambos é igual a 1 */
-	private double fatorEnergiaConsumida;		
-	private double fatorTempoProcessamento;
+	// Cost coefficients
+	/* They establish the importance between energy and time.  
+	 * Their sum must be equal to 1 */
+	private double coefficientEnergy;		
+	private double coefficientTime;
 	
-	// Listas de custos
-	/* - Variável 0 : custo
-	 * - Variável 1 : energia dinâmica CPU
-	 * - Variável 2 : energia transmissão de dados = ZERO
-	 * - Variável 3 : tempo de execução CPU
-	 * - Variável 4 : tempo transmissão de dados = ZERO
-	 * - Variável 5 : frequência de operação
-	 * - Variável 6 : tensão de operação */
+	// Cost lists
+	/* - Variable 0 : cost
+	 * - Variable 1 : CPU core dynamic energy
+	 * - Variable 2 : consumed energy for data transmission = ZERO
+	 * - Variable 3 : CPU core execution time
+	 * - Variable 4 : elapsed time for data transmission = ZERO
+	 * - Variable 5 : operating frequency
+	 * - Variable 6 : CPU core supply voltage */
 	private List<Septet<Double, Double, Double, Double, Double, Long, Double>> costListIoTDevice = 
 			new ArrayList<Septet<Double, Double, Double, Double, Double, Long, Double>>();
 	
-	/* - Variável 0 : custo
-	 * - Variável 1 : energia dinâmica CPU
-	 * - Variável 2 : energia transmissão de dados
-	 * - Variável 3 : tempo de execução CPU
-	 * - Variável 4 : tempo transmissão de dados
-	 * - Variável 5 : frequência de operação
-	 * - Variável 6 : tensão de operação */
+	/* - Variable 0 : cost
+	 * - Variable 1 : CPU core dynamic energy
+	 * - Variable 2 : consumed energy for data transmission
+	 * - Variable 3 : CPU core execution time
+	 * - Variable 4 : elapsed time for data transmission
+	 * - Variable 5 : operating frequency
+	 * - Variable 6 : CPU core supply voltage */
 	private List<Septet<Double, Double, Double, Double, Double, Long, Double>> costListMECServer = 
 			new ArrayList<Septet<Double, Double, Double, Double, Double, Long, Double>>();
 		
-	/* - Variável 0 : custo
-	 * - Variável 1 : energia dinâmica CPU
-	 * - Variável 2 : energia transmissão de dados
-	 * - Variável 3 : tempo de execução CPU
-	 * - Variável 4 : tempo transmissão de dados
-	 * - Variável 5 : frequência de operação
-	 * - Variável 6 : tensão de operação = ZERO */
+	/* - Variable 0 : cost
+	 * - Variable 1 : CPU core dynamic energy
+	 * - Variable 2 : consumed energy for data transmissions
+	 * - Variable 3 : CPU core execution time
+	 * - Variable 4 : elapsed time for data transmission
+	 * - Variable 5 : operating frequency
+	 * - Variable 6 : CPU core supply voltage = ZERO */
 	private List<Septet<Double, Double, Double, Double, Double, Long, Double>> costListCloud = 
 			new ArrayList<Septet<Double, Double, Double, Double, Double, Long, Double>>();
 	
 	
-	// Informações transferências de dados
-	private double energia5GIda; 		// Considera a transferência dos dados de entrada
-	private double tempo5GIda;			// Considera a transferência dos dados de entrada
-	private double energia5GVolta;		// Considera a transferência dos resultados
-	private double tempo5GVolta;		// Considera a transferência dos resultados
-	private double energiaFibraIda; 	// Considera a transferência dos dados de entrada
-	private double tempoFibraIda;		// Considera a transferência dos dados de entrada
-	private double energiaFibraVolta;	// Considera a transferência dos resultados
-	private double tempoFibraVolta;		// Considera a transferência dos resultados
+	// Data transfer information
+	private double energy5GUp; 			// Considers the transfer of entry data
+	private double time5GUp;			// Considers the transfer of entry data
+	private double energy5GDown;		// Considers the transfer of result data
+	private double time5GDown;			// Considers the transfer of result data
+	private double energyFiberUp; 		// Considers the transfer of entry data
+	private double timeFiberUp;			// Considers the transfer of entry data
+	private double energyFiberDown;		// Considers the transfer of result data
+	private double timeFiberDown;		// Considers the transfer of result data
 
-	// Políticas de alocação
-	private static int POLITICA1 = 1;	// Indica processamento no dispositivo IoT
-	private static int POLITICA2 = 2;	// Indica processamento no servidor MEC
-	private static int POLITICA3 = 3;	// Indica processamento na Cloud 
+	// Allocation policies
+	private static int POLICY1_IOT = 1;	
+	private static int POLICY2_MEC = 2;	
+	private static int POLICY3_CLOUD = 3;	 
 	
-	private static int TAREFA_NORMAL = -1;
+	private static int NORMAL_TASK = -1;
 	
-	/* Construtor
+	/* Constructor
 	 * */
-	public Scheduler(Task task, double fatorEnergia, double fatorTempo, double alpha, double beta, double gama) {
+	public Scheduler(Task task, double coefficientEnergy, double coefficientTime, double alpha, double beta, double gamma) {
 		this.task = task;
 		this.iotDevice = new IoTDevice("dummy", 100);
 		this.serverMEC = new MECServer("dummy");
@@ -84,294 +84,289 @@ public class Scheduler {
 		this.transmission5G = new RAN_5G();
 		this.transmissionFiber = new FiberOptics();
 		
-		this.fatorEnergiaConsumida = fatorEnergia;		
-		this.fatorTempoProcessamento = fatorTempo;
+		this.coefficientEnergy = coefficientEnergy;		
+		this.coefficientTime = coefficientTime;
 		
-		// Calcula custos de transmissões de dados
-		this.energia5GIda = this.transmission5G.calculaEnergiaConsumida(this.task.getTamanhoEntrada());
-		this.tempo5GIda = this.transmission5G.calculaTempoTransmissao(this.task.getTamanhoEntrada());
-		this.energia5GVolta = this.transmission5G.calculaEnergiaConsumida(this.task.getTamanhoRetorno());
-		this.tempo5GVolta = this.transmission5G.calculaTempoTransmissao(this.task.getTamanhoRetorno());
+		// Calculate data transmission costs
+		this.energy5GUp = this.transmission5G.calculateConsumedEnergy(this.task.getTamanhoEntrada());
+		this.time5GUp = this.transmission5G.calculateTransferTime(this.task.getTamanhoEntrada());
+		this.energy5GDown = this.transmission5G.calculateConsumedEnergy(this.task.getTamanhoRetorno());
+		this.time5GDown = this.transmission5G.calculateTransferTime(this.task.getTamanhoRetorno());
 		
-		this.energiaFibraIda = this.transmissionFiber.calculateEnergyConsumed(this.task.getTamanhoEntrada());
-		this.tempoFibraIda = this.transmissionFiber.calculateTransmissionTime(this.task.getTamanhoEntrada());
-		this.energiaFibraVolta = this.transmissionFiber.calculateEnergyConsumed(this.task.getTamanhoRetorno());
-		this.tempoFibraVolta = this.transmissionFiber.calculateTransmissionTime(this.task.getTamanhoRetorno());
+		this.energyFiberUp = this.transmissionFiber.calculateEnergyConsumed(this.task.getTamanhoEntrada());
+		this.timeFiberUp = this.transmissionFiber.calculateTransmissionTime(this.task.getTamanhoEntrada());
+		this.energyFiberDown = this.transmissionFiber.calculateEnergyConsumed(this.task.getTamanhoRetorno());
+		this.timeFiberDown = this.transmissionFiber.calculateTransmissionTime(this.task.getTamanhoRetorno());
 		
-		// Calcula custos
-		/* Cada fator estabelece a priorização de utilizar uma ou outra política alocação.
-		 * O somatório dos fatores alpha, beta e game é igual a 1 */
-		this.calculaCustosProcessamentoDevice(alpha);
-		this.calculaCustosProcessamentoMEC(beta);
-		this.calculaCustosProcessamentoCloud(gama);
+		// Calculate costs for each allocation policy
+		/* Alpha + Beta + Gamma must be equal to 1
+		 * Each of these coefficients define priorities for the allocation options. */
+		this.calculateCostPolicyIoTDevice(alpha);
+		this.calculateCostPolicyMECServer(beta);
+		this.calculateCostPolicyCloud(gamma);
 	}
 	
 		
-	/* Calcular custos para política de alocação da tarefa no device
+	/* Calculate costs for the allocation policy in the IoT device
 	 * 
 	 * */
-	private void calculaCustosProcessamentoDevice(double alpha) {
-		// Captura pares freq x tensão do dispositivo IoT
-		List<Pair<Long, Double>> paresFreqTensao = new ArrayList<Pair<Long, Double>>();
-		paresFreqTensao = this.iotDevice.getPairsFrequencyVoltage();
+	private void calculateCostPolicyIoTDevice(double alpha) {
+		// Get pairs frequency-voltage from the IoT device
+		List<Pair<Long, Double>> pairsFrequencyVoltage = new ArrayList<Pair<Long, Double>>();
+		pairsFrequencyVoltage = this.iotDevice.getPairsFrequencyVoltage();
 				
-		for(Pair<Long, Double> parFreqTensao : paresFreqTensao) {
-			double tempoExec = this.iotDevice.calculateExecutionTime(parFreqTensao.getValue0(), this.task.getCargaComputacional()); 
-			double energiaDin = this.iotDevice.calculateDynamicEnergyConsumed(parFreqTensao.getValue0(), parFreqTensao.getValue1(), this.task.getCargaComputacional());
-			double cost = (this.fatorEnergiaConsumida * energiaDin + this.fatorTempoProcessamento * tempoExec) * alpha;
+		for(Pair<Long, Double> pairFrequencyVoltage : pairsFrequencyVoltage) {
+			double executionTime = this.iotDevice.calculateExecutionTime(pairFrequencyVoltage.getValue0(), 
+					this.task.getCargaComputacional()); 
+			double dynamicEnergy = this.iotDevice.calculateDynamicEnergyConsumed(pairFrequencyVoltage.getValue0(),
+					pairFrequencyVoltage.getValue1(), this.task.getCargaComputacional());
+			double cost = (this.coefficientEnergy * dynamicEnergy + this.coefficientTime * executionTime) * alpha;
 			
 			this.costListIoTDevice.add(
 					new Septet<Double, Double, Double, Double, Double, Long, Double> 
-					(cost, energiaDin, 0.0, tempoExec, 0.0, parFreqTensao.getValue0(), parFreqTensao.getValue1()));
+					(cost, dynamicEnergy, 0.0, executionTime, 0.0, pairFrequencyVoltage.getValue0(), pairFrequencyVoltage.getValue1()));
 		}
 		
+		// Has the cost of each pair frequency-voltage for the IoT device
 		this.costListIoTDevice.sort(null);
 	}
 	
 	
-	/* Calcular custos para política de alocação da tarefa no servidor MEC
+	/* Calculate costs for the allocation policy in the MEC server
 	 * 
 	 * */
-	private void calculaCustosProcessamentoMEC(double beta) {
-		// Captura pares freq x tensão do servidor MEC
-		List<Pair<Long, Double>> paresFreqTensao = new ArrayList<Pair<Long, Double>>();
-		paresFreqTensao = this.serverMEC.getParesFreqTensao();
+	private void calculateCostPolicyMECServer(double beta) {
+		// Get pairs frequency-voltage from the MEC Server
+		List<Pair<Long, Double>> pairsFrequencyVoltage = new ArrayList<Pair<Long, Double>>();
+		pairsFrequencyVoltage = this.serverMEC.getPairsFrenquecyVoltage();
 				
-		for(Pair<Long, Double> parFreqTensao : paresFreqTensao) {
-			double tempoExec = this.serverMEC.calculaTempoExecucao(parFreqTensao.getValue0(), this.task.getCargaComputacional()); 
-			double energiaDin = this.serverMEC.calculaEnergiaDinamicaConsumida(parFreqTensao.getValue0(), parFreqTensao.getValue1(), this.task.getCargaComputacional());
-			double energiaDinTotal = energiaDin + this.energia5GIda + this.energia5GVolta;
-			double tempoExecTotal = tempoExec + this.tempo5GIda + this.energia5GVolta;
+		for(Pair<Long, Double> pairFrequencyVoltage : pairsFrequencyVoltage) {
+			double executionTime = this.serverMEC.calculateExecutionTime(pairFrequencyVoltage.getValue0(), this.task.getCargaComputacional()); 
+			double dynamicEnergy = this.serverMEC.calculateDynamicEnergyConsumed(pairFrequencyVoltage.getValue0(), 
+					pairFrequencyVoltage.getValue1(), this.task.getCargaComputacional());
+			double dynamicEnergyTotal = dynamicEnergy + this.energy5GUp + this.energy5GDown;
+			double executionTimeTotal = executionTime + this.time5GUp + this.energy5GDown;
 			
-			double cost = (this.fatorEnergiaConsumida * energiaDinTotal + this.fatorTempoProcessamento * tempoExecTotal) * beta;
+			double cost = (this.coefficientEnergy * dynamicEnergyTotal + this.coefficientTime * executionTimeTotal) * beta;
 			this.costListMECServer.add(
 					new Septet<Double, Double, Double, Double, Double, Long, Double> 
-					(cost, energiaDin, (this.energia5GIda + this.energia5GVolta), 
-							tempoExec, (this.tempo5GIda + this.energia5GVolta), 
-							parFreqTensao.getValue0(), parFreqTensao.getValue1()));
+					(cost, dynamicEnergy, (this.energy5GUp + this.energy5GDown), 
+							executionTime, (this.time5GUp + this.energy5GDown), 
+							pairFrequencyVoltage.getValue0(), pairFrequencyVoltage.getValue1()));
 		}
 		
+		// Has the cost of each pair frequency-voltage for the MEC server
 		this.costListMECServer.sort(null);
 	}
 	
 	
-	/* Calcular custos para política de alocação da tarefa na Cloud
+	/* Calculate costs for the allocation policy in the Cloud
 	 * 
 	 * */
-	private void calculaCustosProcessamentoCloud(double gama) {
-		// Calcula custo para frquência de operação padrão
-		long freqPadrao = this.cloud.getStandarFrequency();
-		double tempoPadrao = this.cloud.calculateExecutionTimeStardardFreq(this.task.getCargaComputacional());
-		double energiaPadrao = this.cloud.calculateDynamicEnergyStandardFreq(this.task.getCargaComputacional());
+	private void calculateCostPolicyCloud(double gama) {
+		// Calculate cost for standard operating frequency
+		long standardFrequency = this.cloud.getStandarFrequency();
+		double standardTime = this.cloud.calculateExecutionTimeStardardFreq(this.task.getCargaComputacional());
+		double standardEnergy = this.cloud.calculateDynamicEnergyStandardFreq(this.task.getCargaComputacional());
 		
-		double energiaTotalPadrao = energiaPadrao + this.energia5GIda + this.energiaFibraIda + this.energiaFibraVolta + this.energia5GVolta;
-		double tempoTotalPadrao = tempoPadrao + this.tempo5GIda + this.tempoFibraIda + this.tempoFibraVolta + this.tempo5GVolta;		
+		double totalStandardEnergy = standardEnergy + this.energy5GUp + this.energyFiberUp + this.energyFiberDown + this.energy5GDown;
+		double totoalStandardTime = standardTime + this.time5GUp + this.timeFiberUp + this.timeFiberDown + this.time5GDown;		
 		
-		double custoPadrao = (this.fatorEnergiaConsumida * energiaTotalPadrao + this.fatorTempoProcessamento * tempoTotalPadrao) * gama;
+		double standardCost = (this.coefficientEnergy * totalStandardEnergy + this.coefficientTime * totoalStandardTime) * gama;
 		this.costListCloud.add(
 				new Septet<Double, Double, Double, Double, Double, Long, Double> 
-				(custoPadrao, energiaPadrao, (this.energia5GIda + this.energiaFibraIda + this.energiaFibraVolta + this.energia5GVolta),
-						tempoPadrao, (this.tempo5GIda + this.tempoFibraIda + this.tempoFibraVolta + this.tempo5GVolta),
-						freqPadrao, 0.0));
+				(standardCost, standardEnergy, (this.energy5GUp + this.energyFiberUp + this.energyFiberDown + this.energy5GDown),
+						standardTime, (this.time5GUp + this.timeFiberUp + this.timeFiberDown + this.time5GDown),
+						standardFrequency, 0.0));
 		
 		
-		// Calcula custo para frquência de turbo boost
-		long freqTurbo = this.cloud.getTurboBoostFrequency();
-		double tempoTurbo = this.cloud.calculaTempoExecucaoFreqTurboBoost(this.task.getCargaComputacional());
-		double energiaTurbo = this.cloud.calculateDynamicEnergyTurboFreq(this.task.getCargaComputacional());
+		// Calculate cost for turbo boost operating frequency
+		long turboFrequency = this.cloud.getTurboBoostFrequency();
+		double turboTime = this.cloud.calculaTempoExecucaoFreqTurboBoost(this.task.getCargaComputacional());
+		double turboEnergy = this.cloud.calculateDynamicEnergyTurboFreq(this.task.getCargaComputacional());
 		
-		double energiaTotalTurbo = energiaTurbo + this.energia5GIda + this.energiaFibraIda + this.energiaFibraVolta + this.energia5GVolta;
-		double tempoTotalTurbo = tempoTurbo + this.tempo5GIda + this.tempoFibraIda + this.tempoFibraVolta + this.tempo5GVolta;
+		double totalTurboEnergy = turboEnergy + this.energy5GUp + this.energyFiberUp + this.energyFiberDown + this.energy5GDown;
+		double totalTurboTime = turboTime + this.time5GUp + this.timeFiberUp + this.timeFiberDown + this.time5GDown;
 		
-		double custoTurbo = (this.fatorEnergiaConsumida * energiaTotalTurbo + this.fatorTempoProcessamento * tempoTotalTurbo) * gama;
+		double turboCost = (this.coefficientEnergy * totalTurboEnergy + this.coefficientTime * totalTurboTime) * gama;
 		this.costListCloud.add(
 				new Septet<Double, Double, Double, Double, Double, Long, Double>
-				(custoTurbo, energiaTurbo, (this.energia5GIda + this.energiaFibraIda + this.energiaFibraVolta + this.energia5GVolta),
-						tempoTurbo, (this.tempo5GIda + this.tempoFibraIda + this.tempoFibraVolta + this.tempo5GVolta),
-						freqTurbo, 0.0));
+				(turboCost, turboEnergy, (this.energy5GUp + this.energyFiberUp + this.energyFiberDown + this.energy5GDown),
+						turboTime, (this.time5GUp + this.timeFiberUp + this.timeFiberDown + this.time5GDown),
+						turboFrequency, 0.0));
 		
-		// Ordena custos
+		// Order the two costs (by cost)
 		this.costListCloud.sort(null);
 	}
 
 	
-	/* Define qual o menor custo
-	 * - flagIoTDevice : Se TRUE indica que a CPU do dispositivo IoT está livre.
-	 * Se FALSE, indica que está ocupada.
-	 * - flagMECServer : Se TRUE indica que alguma CPU de algum dos servidores MEC
-	 * está livre. Se FALSE, indica que todas as CPUs de todos os servidores MEC 
-	 * estão ocupadas.
+	/* Define the allocation policy to execute the task
+	 * - flagIoTDevice : If TRUE indicates that the IoT device's CPU is free.
+	 * If FALSE, indicates it is occupied.
+	 * - flagMECServer : If TRUE indicates that at least one CPU core from the 
+	 * MEC server is free. If FALSE, then all MEC server CPU cores are occupied. 
 	 * 
-	 * Retorno:
-	 * - Sexteto com o menor custo 
+	 * Return: Octet with smallest cost 
 	 * */
-	public Octet<Double, Double, Double, Double, Double, Long, Double, Integer> defineMenorCusto(boolean flagIoTDevice, boolean flagMECServer) {	
-		// Comparador global de custos
+	public Octet<Double, Double, Double, Double, Double, Long, Double, Integer> defineAllocationPolicy(boolean flagIoTDevice, boolean flagMECServer) {	
+		// Global cost comparator
 		List<Octet<Double, Double, Double, Double, Double, Long, Double, Integer>> globalCostList = 
 				new ArrayList<Octet<Double, Double, Double, Double, Double, Long, Double, Integer>>();
 		
-		// Política 1: Insere custos do dispositivo IoT para comparação
+		// Policy 1 - IoT device: Insert costs for comparison
 		if(flagIoTDevice == Boolean.TRUE) {
 			for(Septet<Double, Double, Double, Double, Double, Long, Double> septet : this.costListIoTDevice) {
-				globalCostList.add(septet.add(POLITICA1));
+				globalCostList.add(septet.add(POLICY1_IOT));
 			}
 		}
 		
-		// Política 2: Insere custos do servidor MEC para comparação
+		// Policy 2 - MEC Server: Insert costs for comparison
 		if(flagMECServer == Boolean.TRUE) {
 			for(Septet<Double, Double, Double, Double, Double, Long, Double> septet : this.costListMECServer) {
-				globalCostList.add(septet.add(POLITICA2));
+				globalCostList.add(septet.add(POLICY2_MEC));
 			}
 		}
 		
-		// Política 3: Insere custos da Cloud para comparação
+		// Policy 3 - Cloud: Insert costs for comparison
 		for(Septet<Double, Double, Double, Double, Double, Long, Double> septet : this.costListCloud) {
-			globalCostList.add(septet.add(POLITICA3));
+			globalCostList.add(septet.add(POLICY3_CLOUD));
 		}
 		
-		// Confere tipo de tarefa
-		// Para tarefa crítica, ordenação por tempo
-		// Para tarefa não-crítica, ordenação por custo
-		if(task.getDeadline() != TAREFA_NORMAL) {
+		// Checks task type, if critical of not
+		// * For critical tasks: Order by total time
+		// * For non-critical tasks: Order by cost
+		if(task.getDeadline() != NORMAL_TASK) {
 			
-			// É tarefa crítica. Resultado ordenado pelo menor tempo.
-			List<Octet<Double, Double, Double, Double, Double, Long, Double, Integer>> globalCostListCritica = 
+			// Task is critical - Rearrange global list comparator to have total as the first value
+			List<Octet<Double, Double, Double, Double, Double, Long, Double, Integer>> globalCostListCritical = 
 					new ArrayList<Octet<Double, Double, Double, Double, Double, Long, Double, Integer>>();
 			for(Octet<Double, Double, Double, Double, Double, Long, Double, Integer> octet : globalCostList) {
 				Octet<Double, Double, Double, Double, Double, Long, Double, Integer> aux = 
 						new Octet<Double, Double, Double, Double, Double, Long, Double, Integer>
 								((octet.getValue3()+octet.getValue4()), octet.getValue1(), octet.getValue2(), octet.getValue0(), 
 										octet.getValue4(), octet.getValue5(), octet.getValue6(), octet.getValue7());
-				globalCostListCritica.add(aux);
+				globalCostListCritical.add(aux);
 			}
+			globalCostListCritical.sort(null);
 			
-			globalCostListCritica.sort(null);
+			if(Boolean.FALSE)
+				this.printOctetList(globalCostListCritical);
 			
-			// Imprime elementos do sexteto
-			if(Boolean.FALSE) this.imprimeListaOcteto(globalCostListCritica);
-			
-			// Altera ordem dos elementos 0 e 2 para manter o padrão de custo na posição 0 e tmepo na posição 2
-			Octet<Double, Double, Double, Double, Double, Long, Double, Integer> resultado = 
+			// Alter back octet elements 0 and 3 to keep the stardard of cost being value0 and total time value2
+			Octet<Double, Double, Double, Double, Double, Long, Double, Integer> resultOctet = 
 					new Octet<Double, Double, Double, Double, Double, Long, Double, Integer> (
-							globalCostListCritica.get(0).getValue3(), globalCostListCritica.get(0).getValue1(), 
-							globalCostListCritica.get(0).getValue2(), (globalCostListCritica.get(0).getValue0()-globalCostListCritica.get(0).getValue4()), 
-							globalCostListCritica.get(0).getValue4(), globalCostListCritica.get(0).getValue5(),
-							globalCostListCritica.get(0).getValue6(), globalCostListCritica.get(0).getValue7());
+							globalCostListCritical.get(0).getValue3(), globalCostListCritical.get(0).getValue1(), 
+							globalCostListCritical.get(0).getValue2(), (globalCostListCritical.get(0).getValue0()-globalCostListCritical.get(0).getValue4()), 
+							globalCostListCritical.get(0).getValue4(), globalCostListCritical.get(0).getValue5(),
+							globalCostListCritical.get(0).getValue6(), globalCostListCritical.get(0).getValue7());
 			
-			return resultado; // Retorna elemento de menor tempo de execução
+			// Return octet with the lowest total time
+			return resultOctet; 
 			
 		} else {
-			// É tarefa normal. Resultado ordenado pelo menor custo global.
+			// Task is normal (non-critical) - Order results by cost
 			globalCostList.sort(null);
 
-			// Imprime elementos do sexteto
-			if(Boolean.FALSE) this.imprimeListaOcteto(globalCostList);
+			if(Boolean.FALSE)
+				this.printOctetList(globalCostList);
 			
-			return globalCostList.get(0); // Retorna elemento de menor custo
+			// Return octet with smallest cost
+			return globalCostList.get(0); 
 		}
 	}
 	
 
-	/* Imprime sexteto
+	/* Print Octet cost list for one task
+	 * - octetList: the list with octets to be printed.
 	 * 
 	 * */
-	private void imprimeListaOcteto(List<Octet<Double, Double, Double, Double, Double, Long, Double, Integer>> octetList) {
+	private void printOctetList(List<Octet<Double, Double, Double, Double, Double, Long, Double, Integer>> octetList) {
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(3);
 		
-		System.out.println("-------------------------------------------------");
-		System.out.println("Conteúdo do sexteto");
-		
-		if(task.getDeadline() != -1) {
-			// Tarefa é crítica
-			System.out.println(task.getIdTarefa() + " é crítica.");
-		
-			int i = 0;
+		System.out.println("-------------------------------------------------");			
+		if(this.task.getDeadline() != -1) {
+			// Task is critical
+			System.out.println(this.task.getIdTarefa() + " is critical.");
+			System.out.println("Cost;CPU core Energy;Transfer Energy;CPU core Time;Diff Time;Transfer Time;Frequency;Voltage;Policy");
+			
 			for(Octet<Double, Double, Double, Double, Double, Long, Double, Integer> octet : octetList) {
-				
-				/* Calcula se a diferença entre o tempo total de execução e o deadline  */
-				long difTempo = (long) (task.getDeadline() - octet.getValue0());
-				
-				System.out.println("Tempo " + i + ": " + df.format(octet.getValue0()) + " µs; Energia CPU: " + df.format(octet.getValue1()) +
-						" W*µs; Energia transmissões: " + df.format(octet.getValue2()) + " W*µs; Custo: " + df.format(octet.getValue3()) + 
-						" µs; Diff Tempo: " + difTempo + " µs; Freq: " + octet.getValue5() + " Hz; Tensão: " + octet.getValue6() + 
-						" V; Política: " + octet.getValue7());
-				i++;
+				// Calculate difference between total time and deadline
+				long diffTime = (long) (this.task.getDeadline() - octet.getValue0());
+				System.out.println(df.format(octet.getValue0()) + ";" + df.format(octet.getValue1()) + ";" + 
+						   df.format(octet.getValue2()) + ";" + df.format(octet.getValue3()) + ";" + diffTime + ";" +
+						   df.format(octet.getValue4()) + ";" + octet.getValue5() + ";" + 
+						   octet.getValue6() + ";" + octet.getValue7());
 			}
 		}
 		else {
-			// Tarefa não é crítica
-			int i = 0;
+			// Task is non-critical (normal)
+			System.out.println(this.task.getIdTarefa() + " is non-critical (normal).");
+			System.out.println("Cost;CPU core Energy;Transfer Energy;CPU core Time;Transfer Time;Frequency;Voltage;Policy");
 			
-			System.out.println("Custo;Energia CPU;Energia transmissões;Tempo CPU;Tempo transmissões;Freq;Tensão;Política");
-			for(Octet<Double, Double, Double, Double, Double, Long, Double, Integer> octet : octetList) {
-				/*
-				System.out.println("Custo " + i + ": " + df.format(octet.getValue0()) + "; Energia CPU: " + df.format(octet.getValue1()) + 
-						" W*µs; Energia transmissões: " + df.format(octet.getValue2()) + " W*µs; Tempo CPU: " + df.format(octet.getValue3()) + 
-						" µs; Tempo transmissões: " + df.format(octet.getValue4()) + " µs; Freq: " + octet.getValue5() + " Hz; Tensão: " + octet.getValue6() +
-						" V; Política: " + octet.getValue7());
-				*/
+			for(Octet<Double, Double, Double, Double, Double, Long, Double, Integer> octet : octetList) {				
 				System.out.println(df.format(octet.getValue0()) + ";" + df.format(octet.getValue1()) + ";" + 
-								   df.format(octet.getValue2()) + ";" + df.format(octet.getValue3()) + ";" + 
-								   df.format(octet.getValue4()) + ";" + octet.getValue5() + ";" + 
-								   octet.getValue6() + ";" + octet.getValue7());
-				i++;
+						   df.format(octet.getValue2()) + ";" + df.format(octet.getValue3()) + ";" +
+						   df.format(octet.getValue4()) + ";" + octet.getValue5() + ";" + 
+						   octet.getValue6() + ";" + octet.getValue7());
 			}
 		}
+		
+		
 	}
 	
 	
-	/* Imprime custos
+	/* Print systems costs
 	 * 
 	 * */
-	public void imprimeCustos() {
+	public void printSystemCosts() {
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(3);
 		
 		System.out.println("-------------------------------------------------");
-		System.out.println("Fator de custo de energia: " + this.fatorEnergiaConsumida);
-		System.out.println("Fator de custo de tempo: " + this.fatorTempoProcessamento);
+		System.out.println("Energy coefficient: " + this.coefficientEnergy);
+		System.out.println("Time coefficient: " + this.coefficientTime);
 		System.out.println("-------------------------------------------------");
-		System.out.println("Entrada de dados: " + this.task.getTamanhoEntrada() + " bits");
-		System.out.println("Retorno de resultados: " + this.task.getTamanhoRetorno() + " bits");
+		System.out.println("Data Entry Size: " + this.task.getTamanhoEntrada() + " bits");
+		System.out.println("Result Data Size: " + this.task.getTamanhoRetorno() + " bits");
 		System.out.println("-------------------------------------------------");
-		System.out.println("Energia 5G ida: " + this.energia5GIda + " W");
-		System.out.println("Tempo 5G ida: " + this.tempo5GIda + " s");
-		System.out.println("Energia 5G volta: " + this.energia5GVolta + " W");
-		System.out.println("Tempo 5G volta: " + this.tempo5GVolta + " s");
+		System.out.println("5G Energy Up: " + this.energy5GUp + " W");
+		System.out.println("5G Time Up: " + this.time5GUp + " s");
+		System.out.println("5G Energy Down: " + this.energy5GDown + " W");
+		System.out.println("5G Time Down: " + this.time5GDown + " s");
 		System.out.println("-------------------------------------------------");
-		System.out.println("Energia Fibra ida: " + this.energiaFibraIda + " W");
-		System.out.println("Tempo Fibra ida: " + this.tempoFibraIda + " s");
-		System.out.println("Energia Fibra volta: " + this.energiaFibraVolta + " W");
-		System.out.println("Tempo Fibra volta: " + this.tempoFibraVolta + " s");
+		System.out.println("Fiber Energy Up: " + this.energyFiberUp + " W");
+		System.out.println("Fiber Time Up: " + this.timeFiberUp + " s");
+		System.out.println("Fiber Energy Down: " + this.energyFiberDown + " W");
+		System.out.println("Fiber Time Down: " + this.timeFiberDown + " s");
 		
 		System.out.println("-------------------------------------------------");
-		System.out.println("Custos para processamento local, no dispositivo: ");
+		System.out.println("Costs for local processing, in the IoT device, policy 1: ");
 		int i = 0;
 		for(Septet<Double, Double, Double, Double, Double, Long, Double> septet : this.costListIoTDevice) {
-			System.out.println("Custo " + i + ": " + df.format(septet.getValue0()) + "; Energia CPU: " + df.format(septet.getValue1()) +
-								"; Energia transmissões: " + septet.getValue2() + "; Tempo CPU: " + septet.getValue3() + 
-								"; Tempo transmissões: " + septet.getValue4() + "; Freq: " + septet.getValue5() + "; Tensão: " + septet.getValue6());
+			System.out.println("Cost " + i + ": " + df.format(septet.getValue0()) + "; CPU core energy: " + df.format(septet.getValue1()) +
+								"; Transfer energy: " + septet.getValue2() + "; CPU core time: " + septet.getValue3() + 
+								"; Transfer time: " + septet.getValue4() + "; Frequency: " + septet.getValue5() + "; Voltage: " + septet.getValue6());
 			i++;
 		}
 		
 		System.out.println("-------------------------------------------------");
-		System.out.println("Custos para processamento local, no servidor MEC: ");
+		System.out.println("Costs for local processing, in the MEC server, policy 2: ");
 		i = 0;
 		for(Septet<Double, Double, Double, Double, Double, Long, Double> septet : this.costListMECServer) {
-			System.out.println("Custo " + i + ": " + df.format(septet.getValue0()) + "; Energia CPU: " + df.format(septet.getValue1()) +
-					"; Energia transmissões: " + septet.getValue2() + "; Tempo CPU: " + septet.getValue3() + 
-					"; Tempo transmissões: " + septet.getValue4() + "; Freq: " + septet.getValue5() + "; Tensão: " + septet.getValue6());
+			System.out.println("Cost " + i + ": " + df.format(septet.getValue0()) + "; CPU core energy: " + df.format(septet.getValue1()) +
+					"; Transfer energy: " + septet.getValue2() + "; CPU core time: " + septet.getValue3() + 
+					"; Transfer time: " + septet.getValue4() + "; Frequency: " + septet.getValue5() + "; Voltage: " + septet.getValue6());
 			i++;
 		}
 		
 		System.out.println("-------------------------------------------------");
-		System.out.println("Custos para processamento remoto, na Cloud: ");
+		System.out.println("Costs for remote processing, in the Cloud, policy 3: ");
 		i = 0;
 		for(Septet<Double, Double, Double, Double, Double, Long, Double> septet : this.costListCloud) {
-			System.out.println("Custo " + i + ": " + df.format(septet.getValue0()) + "; Energia CPU: " + df.format(septet.getValue1()) +
-					"; Energia transmissões: " + septet.getValue2() + "; Tempo CPU: " + septet.getValue3() + 
-					"; Tempo transmissões: " + septet.getValue4() + "; Freq: " + septet.getValue5() + "; Tensão: " + septet.getValue6());
+			System.out.println("Cost " + i + ": " + df.format(septet.getValue0()) + "; CPU core energy: " + df.format(septet.getValue1()) +
+					"; Transfer energy: " + septet.getValue2() + "; CPU core time: " + septet.getValue3() + 
+					"; Transfer time: " + septet.getValue4() + "; Frequency: " + septet.getValue5() + "; Voltage: " + septet.getValue6());
 			i++;
 		}
 		

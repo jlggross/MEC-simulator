@@ -2,55 +2,54 @@ package main;
 
 public class RAN_5G {
 
-	double latencia;		//Em s
-	double alpha;			//Em W
-	double beta; 			//Em W
-	long taxaTransferencia;	//Em bits/s
+	double latency;			// In seconds
+	double alpha;			// In Watt
+	double beta; 			// In Watt
+	long transferRate;		// In bits/s
 	
-	/* Construtor
+	/* Constructor
 	 * 
 	 * */
 	public RAN_5G() {
-		this.latencia = (double) (5 * Math.pow(10, -3));
+		this.latency = (double) (5 * Math.pow(10, -3));
 		this.alpha = (double) (0.52 * Math.pow(10, -3));
 		this.beta = (double) 3.86412; 
-		this.taxaTransferencia = (long) Math.pow(10, 9);
+		this.transferRate = (long) Math.pow(10, 9);
 	}
 	
 	
-	/* Calcula potência da transmissão de dados 5G
-	 * - taxaTransferencia : Em bits por segundo
+	/* Calculate the transmission power for 5G
 	 * 
-	 * retorno : em W
+	 * Return: In W
 	 * */
-	public double calculaPotencia() {
-		double potencia;
-		potencia = (double) (this.alpha * this.taxaTransferencia / Math.pow(10, 6) + this.beta);
-		return potencia;
+	public double calculatePower() {
+		double power;
+		power = (double) (this.alpha * this.transferRate / Math.pow(10, 6) + this.beta);
+		return power;
 	}
 	
 	
-	/* Calcula tempo da transmissão de dados 5G
-	 * - tamanhoDados : Em bits
+	/* Calculate data transmission time for 5G
+	 * - dataSize : In bits
 	 * 
-	 * Retorno: Em micro segundos  
+	 * Return: In micro seconds  
 	 * */
-	public double calculaTempoTransmissao(long tamanhoDados) {
-		double tempoTransmissao;
-		tempoTransmissao = (double) tamanhoDados / (double) this.taxaTransferencia; // Em segundos
-		tempoTransmissao = tempoTransmissao * Math.pow(10, 6); // Em micro segundos
-		return tempoTransmissao;
+	public double calculateTransferTime(long dataSize) {
+		double transferTime;
+		transferTime = (double) dataSize / (double) this.transferRate; // In seconds
+		transferTime = transferTime * Math.pow(10, 6); // In micro seconds
+		return transferTime;
 	}
 	
 	
-	/* Calcula energia consumida durante a transferência de dados
-	 * - tamanhoDados : Em bits
+	/* Calculate consumed energy during data transfer
+	 * - dataSize : In bits
 	 * 
-	 * Retorno: Em W * micro-segundo
+	 * Return: In W * micro-second
 	 * */
-	public double calculaEnergiaConsumida(long tamanhoDados) {
-		double energia;
-		energia = this.calculaPotencia() * this.calculaTempoTransmissao(tamanhoDados); // Em W * micro-segundo
-		return energia;
+	public double calculateConsumedEnergy(long dataSize) {
+		double energy;
+		energy = this.calculatePower() * this.calculateTransferTime(dataSize); // In W * micro-second
+		return energy;
 	}
 }
