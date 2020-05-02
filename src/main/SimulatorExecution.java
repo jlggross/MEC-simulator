@@ -356,8 +356,8 @@ public class SimulatorExecution {
 		// Order tuple list by the tasks finalization time
 		listOctet.sort(null);
 		
-		String header = "Tempo;Politica;Status Finalizacao;Energia CPU;Energia Transmissoes;Tempo CPU;Tempo Transmissoes;Custo\n";
-		imprimeOctetoParaArquivo(filename, header, listOctet);
+		String header = "Time;Policy;Finalization Status;CPU core Energy;Transfer Energy;CPU core Time;Transfer Time;Cost\n";
+		printOctetsToFile(filename, header, listOctet);
 	}
 	
 	
@@ -374,7 +374,7 @@ public class SimulatorExecution {
 	 * 7 Cost							: Cost
 	 * 
 	 * */
-	public static void imprimeOctetoParaArquivo(String filename, String header, 
+	public static void printOctetsToFile(String filename, String header, 
 			List<Octet<Long, String, String, Long, Long, Long, Long, Long>> listOctet) throws IOException {
 		
 		BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
