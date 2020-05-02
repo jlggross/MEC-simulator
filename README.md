@@ -130,14 +130,15 @@ The project is ready to be executed. Just alter the specified values to get diff
 # 6 Output files and data analysis
 The simulation has been designed to output files in a format that makes analysis easy. The files generated are .txt files with values separed by commas. The file *01-500-100-1-200000-LoadVariation.txt* is an exmaple of output file.
 
-To read this file you can use Microsoft Excel's import data from file feature. Just go the the **Data tab**, select option **Import data from text file** and choose the delimiter ';'. With that you can select data, plot graphs and analyse the simulation results.
+To read this file you can use Microsoft Excel's import data from file feature. Just go the the **Data tab**, select option **Import data from text file** and choose the semicolon delimiter (';'). With that you can select data, plot graphs and analyse the simulation results. An example of spreadsheet is in *misc/dataImportedToExcel.xlsx*.
+
+![Data tab in Excel](images/excel-dataTab.png)
 
 # 7 More info
 If you want more detailed information about the cost model, simulator, experiments and results, please check the article inside the **misc** folder of this project (article-workinprogress.pdf).
 
 ## 7.1 Dependencies
 This project uses javatuples-1.2.jar. This library is included in the "libraries" folder.
-
 
 # References:
 * Yu, H.; Wang, Q.; Guo, S. Energy-efficient task offloading and resource scheduling for mobile edge computing. In: 2018 IEEE International Conference on Networking, Architecture and Storage (NAS). [S.l.: s.n.], 2018. p. 1–4.
