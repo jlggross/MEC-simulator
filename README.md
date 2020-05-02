@@ -78,7 +78,7 @@ Given the power consumed by a CPU core the total energy consumed can be calculat
 
 ![Energy equation for CPU](images/ENERGYconsumed.png)
 
-## 3.3. DVFS
+## 3.3 DVFS
 The DVFS (Dynamic Voltage and Frequency Scaling) technique is used in order to alter the energy consumed by the CPU cores of both IoT devices and MEC servers during execution time (Sarangi; Goel; Singh, 2018). The TEMS algorithm calculates the final costs of all options of operating frequency and core voltage and chooses the best fitting option, i. e. the pair frequency-voltage that provides the minimum calculated cost for the system.
 
 Altering the frequency and voltage in the power equation presented in Section 3.2, we have different power levels. With a lower frequency the power and energy consumed will be smaller, but execution time may be too long. **That is a trade-off the scheduling algorithm deals with**.
@@ -97,7 +97,7 @@ In this equation the allocation option that yields the lowest cost per task is c
 ![Systems cost](images/COSTsystem.PNG)
 
 
-# 4. The TEMS scheduling algorithm
+# 4 The TEMS scheduling algorithm
 So we have the three layer architecture, the layers interaction with it's corresponding type of communication technology (5G and fiber optics) 
 
 ![The TEMS scheduling algorithm](images/TEMSalgorithm.PNG)
@@ -106,20 +106,38 @@ Initially the scheduler collects information about the CPU cores from IoT device
 
 In step 3 tasks are monitored for conclusion. If a task finishes then the hardware used is made available for other tasks. Finally in step 4, the scheduler monitors the system for new tasks and updates the level of batteries for each IoT devices. If an IoT device reaches a inferior security limit of level battery, then allocation cannot occur in the IoT device anymore, because the scheduler will preserve the device to keep running (alive) and creating new tasks (application and users experience is maintained).
 
-# 5. Setting the project and running experiments
-The simulator executes a scheduling algorithm in a Mobile Edge Computing (MEC) environment. The scheduling algorithm, named TEMS (Time and Energy Minimization Scheduler) is responsable for 
+# 5 Setting the project and running experiments
+The file you have to first look at is *SimulatorExecution.java*. There is the simulation's core, where are defined the characteristics of the applocations to be simulated, the number of created tasks in each simulation and number of IoT devices and MEC servers in the architecture.
 
-## 5.1 Macro allocation process
-Here is a step-by-step of how the simulator works:
+Also, you have to define the energy and time coefficents used in the task's cost equation for each policy (coefficientEnergy and coefficientTime variables) and alpha, beta and gamma, used in the cost minimation equation of each task. The code is already set with a basic configuration, your just have to worry if you want to alter values, otherwise the simulation is ready to execute.
 
-1. Choose the application characteristcs and configure then in the simulator. 
+About some of the classes:
 
-2. Choose the number of IoT devices, MEC servers and number of created tasks. Ex.: 100 IoT devices, 2 MEC servers and 500 tasks. In this configuration each IoT device will create 5 tasks. 
+* **RAN_5G.java**: You can set the latency of the connection and transfer rate. It is also possible to alter the power consumed during data transmisison. A basic setup is alredy configured.
 
-Tasks are created in the IoT devices. If the scheduling algorithm devices to offload the task and execute it in a MEC server, then a 5G connecting is made, adding latency to the application. But if the task if offloaded to the Cloud, then a 5G connecting is made with the MEC server, which receives the tasks data and source code, and another connecting between the MEC server and the Cloud is made, finally sending the tasks data and source code to the Cloud. In this second case more latency is added to the application. When the task's executing is complete the results must be sent back to the IoT device (the user).
+* **FiberOptics.java**: You can set the latency, power and transfer rate. A basic setup is alredy configured.
 
-# More info
+* **IoTDevice.java**: In the constructor method you can set the capacitance of the IoT device chipset, the power consumed in idle, battery level, battery inferior safety limit, and the pairs with frequency and voltage for the CPU cores. These pairs, alongside with the capacitance, are used to calculate the dynamic power of the CPU cores. A basic setup is alredy configured.
+
+* **MECServer.java**: In the constructor method you can set the capacitance of the MEC server chipset, the power consumed in idle and the pairs with frequency and voltage for the CPU cores. These pairs, alongside with the capacitance, are used to calculate the dynamic power of the CPU cores. A basic setup is alredy configured.
+
+* **CloudDataCenter.java**: In the constructor method you can set the standard and turbo boost frequencies of the Cloud CPU cores. In methods *calculateDynamicEnergyStandardFreq()* and *calculateDynamicEnergyTurboFreq()* you can set the CPU core power associated to each frequency.
+
+* **Application.java, Scheduler.java and Task.java**: These classes have nothing to set. The characteristics associated to the application are set in *SimulatorExecution.java*.
+
+The project is ready to be executed. Just alter the specified values to get different results.
+
+# 6 Output files and data analysis
+The simulation has been designed to output files in a format that makes analysis easy. The files generated are .txt files with values separed by commas. The file *01-500-100-1-200000-LoadVariation.txt* is an exmaple of output file.
+
+To read this file you can use Microsoft Excel's import data from file feature. Just go the the **Data tab**, select option **Import data from text file** and choose the delimiter ';'. With that you can select data, plot graphs and analyse the simulation results.
+
+# 7 More info
 If you want more detailed information about the cost model, simulator, experiments and results, please check the article inside the **misc** folder of this project (article-workinprogress.pdf).
+
+## 7.1 Dependencies
+This project uses javatuples-1.2.jar. This library is included in the "libraries" folder.
+
 
 # References:
 * Yu, H.; Wang, Q.; Guo, S. Energy-efficient task offloading and resource scheduling for mobile edge computing. In: 2018 IEEE International Conference on Networking, Architecture and Storage (NAS). [S.l.: s.n.], 2018. p. 1–4.
