@@ -88,7 +88,13 @@ To make things clearer, look at the image below and see how pair of frequency an
 ![DVFS for a Intel Pentium M processor of 1.6GHz](images/DVFScore.PNG) (INTEL, 2004)
 
 ## 3.4 Cost model equations by task and for the system
-Using the equations shown before we can calculate the total elapsed time and total energy consumed by **one** task in the system:
+Using the equations shown before we can calculate the total elapsed time and total energy consumed by **one** task if allocated to the IoT device itself:
+
+![Task cost for the IoT device](images/TaskCostEquantion.PNG) 
+
+The same goes for the cost in the MEC server and in the Cloud. In the equation above UlocalE and UlocalT represent, respectively, the energy and time coefficients used to make either energy or time more costly for this allocation option. 
+
+To find the minimum cost in the system for the task we compare the costs of all allocation options and choose the smallest one:
 
 ![Cost of a single task](images/COSTsingleTask.PNG)
 
