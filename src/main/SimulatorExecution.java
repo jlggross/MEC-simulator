@@ -193,11 +193,11 @@ public class SimulatorExecution {
 						// -----------------------------------------------------------------------------
 						// 5.3. Updates energy consumed, elapsed time and allocation policy for the task
 						// -----------------------------------------------------------------------------						
-						newTask.setEnergiaExecucao(octet.getValue1());
-						newTask.setEnergiaTransmissaoDados(octet.getValue2());
-						newTask.setTempoExecucao(octet.getValue3());
-						newTask.setTempoTransmissaoDados(octet.getValue4());
-						newTask.setPolitica(octet.getValue7());
+						newTask.setExecutionEnergy(octet.getValue1());
+						newTask.setTransferEnergy(octet.getValue2());
+						newTask.setExecutionTime(octet.getValue3());
+						newTask.setTransferTime(octet.getValue4());
+						newTask.setPolicy(octet.getValue7());
 						
 						if(Boolean.FALSE) {
 							printMessageOnConsole(listOfIoTDevices[i].getId() + " - Battery Level: " + 
@@ -213,7 +213,7 @@ public class SimulatorExecution {
 						
 						if(Boolean.FALSE) {
 							// Print the number of occupied CPU cores in the MEC servers
-							printMessageOnConsole(newTask.getIdTarefa() + " created; System time: " + systemTime);
+							printMessageOnConsole(newTask.getIdTask() + " created; System time: " + systemTime);
 							for(int j = 0; j < numberMECServers; j++) {
 								int qtde = listOfMECServers[j].getNumberOfFreeCPUs();
 								printMessageOnConsole(listOfMECServers[j].getId() + " with " + qtde + " free CPU cores; System time: " + systemTime);
@@ -235,7 +235,7 @@ public class SimulatorExecution {
 					for(Task aux : listRunningTasksAux) {
 						Task task = aux;
 						
-						if(task.verificaSeTarefaDeveFinalizar(systemTime) == Boolean.TRUE) {
+						if(task.verifyIfTaskMustFinish(systemTime) == Boolean.TRUE) {
 							listFinishedTasks[numberTasksCanceledAndConcluded] = task;
 							numberTasksCanceledAndConcluded++;
 							listRunningTasks.remove(aux);
@@ -243,11 +243,11 @@ public class SimulatorExecution {
 							// ---------------------------------------------------------------------------
 							// 6.1. Free resources 
 							// ---------------------------------------------------------------------------
-							if(task.getPolitica() == POLICY1_IOT) {
-								int id = Integer.parseInt(task.getIdDeviceGerador().split("-")[1]);
+							if(task.getPolicy() == POLICY1_IOT) {
+								int id = Integer.parseInt(task.getIdDeviceGenerator().split("-")[1]);
 								listOfIoTDevices[id].alterCPUStatus(CORE_FREE);
 							}
-							if(task.getPolitica() == POLICY2_MEC) {
+							if(task.getPolicy() == POLICY2_MEC) {
 								for(int j = 0; j < numberMECServers; j++) {
 									if(listOfMECServers[j].freeCPU() == Boolean.TRUE)
 										break;
@@ -268,7 +268,7 @@ public class SimulatorExecution {
 				if(numberTasksCanceledAndConcluded == numberTasks) {
 					if(Boolean.FALSE) {
 						for(int j = 0; j < numberTasks; j++) {
-							System.out.println(listFinishedTasks[j].getIdTarefa() + "; Energia: " + listFinishedTasks[j].getEnergiaTotalConsumida());
+							System.out.println(listFinishedTasks[j].getIdTask() + "; Energia: " + listFinishedTasks[j].getTotalConsumedEnergy());
 						}
 					}
 					break; // Finishes simulation round
@@ -324,15 +324,15 @@ public class SimulatorExecution {
 		
 		for(int i = 0; i < tasksFinalized.length; i++) {
 			String policy;
-			if(tasksFinalized[i].getPolitica() == POLICY1_IOT)
+			if(tasksFinalized[i].getPolicy() == POLICY1_IOT)
 				policy = "POLICY1_IOT";
-			else if(tasksFinalized[i].getPolitica() == POLICY2_MEC)
+			else if(tasksFinalized[i].getPolicy() == POLICY2_MEC)
 				policy = "POLICY2_MEC";
 			else
 				policy = "POLICY3_CLOUD";
 			
 			String statusFinalizacao;
-			if(tasksFinalized[i].getStatusTarefa() == TASK_CONCLUDED)
+			if(tasksFinalized[i].getTaskStatus() == TASK_CONCLUDED)
 				statusFinalizacao = "TASK_CONCLUDED";
 			else
 				statusFinalizacao = "TASK_CANCELED";
@@ -340,14 +340,14 @@ public class SimulatorExecution {
 			Octet<Long, String, String, Long, Long, Long, Long, Long> octet = 
 					new Octet<Long, String, String, Long, Long, Long, Long, Long>
 					( 
-						(long) (tasksFinalized[i].getTempoBase() + tasksFinalized[i].getTempoTotalDecorrido()),
+						(long) (tasksFinalized[i].getBaseTime() + tasksFinalized[i].getTotalElapsedTime()),
 						policy, 
 						statusFinalizacao, 
-						(long) tasksFinalized[i].getEnergiaExecucao(), 
-						(long) tasksFinalized[i].getEnergiaTransmissaoDados(), 
-						tasksFinalized[i].getTempoExecucao(), 
-						tasksFinalized[i].getTempoTransmissaoDados(), 
-						(long) (coefficientEnergy*tasksFinalized[i].getEnergiaTotalConsumida() + coefficientTime*tasksFinalized[i].getTempoTotalDecorrido())
+						(long) tasksFinalized[i].getExecutionEnergy(), 
+						(long) tasksFinalized[i].getTransferEnergy(), 
+						tasksFinalized[i].getExecutionTime(), 
+						tasksFinalized[i].getTransferTime(), 
+						(long) (coefficientEnergy*tasksFinalized[i].getTotalConsumedEnergy() + coefficientTime*tasksFinalized[i].getTotalElapsedTime())
 					);
 			
 			listOctet.add(octet);

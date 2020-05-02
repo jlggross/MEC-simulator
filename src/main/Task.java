@@ -2,7 +2,6 @@ package main;
 
 public class Task {
 
-	// Variáveis fixas
 	private String idTask;			
 	private String idDevice;			// IoT Device that created the task
 	private long deadline;				// In micro seconds
@@ -21,29 +20,27 @@ public class Task {
 	private long timeTransfer;			// In micro seconds
 	
 	private static int TASK_ALIVE = 1; 		// Task being allocated and executed
-	private static int TASK_CONCLUDED = 2;	// Concluída. Se tarefa com deadline, terminou antes do deadline
-	private static int TASK_CALCELLED = 3;	// Cancelada. Dispositivo ficou sem bateria ou tarefa finalizou depois do deadline
+	private static int TASK_CONCLUDED = 2;	// Task is concluded. If task is critical, it will be concluded if task finishes before deadline.
+	private static int TASK_CALCELLED = 3;	// Task is cancelled. Device ran out of battery or task finalized after deadline.
 	private int taskStatus;		
 	
 	private static int POLICY1_IOT = 1;
 	private static int POLICY2_MEC = 2;
 	private static int POLICY3_CLOUD = 3;
-	private int policy; 				// Indica qual a politica de escalonamento adotada
-										/* Setado na fase de escalonamento, durante a simulação.
-										 * Pode conter os valores 1, 2 e 3, para processamento local no device,
-										 * processamento local no servidor MEC ou processamento remoto na Cloud. */
+	private int policy; 				// Indicate the chosen scheduling policy
+										// Chosen in the scheduling fase, during simulation. Can have values 1, 2 or 3
 	
 	/* Constructor
 	 * 
 	 * */
-	public Task(String idTarefa, String idDevice, long deadline, long tempoBase, long cargaComputacional, long tamanhoEntrada, long tamanhoRetorno) {
+	public Task(String idTarefa, String idDevice, long deadline, long baseTime, long computationalLoad, long dataEntrySize, long returnDataSize) {
 		this.idTask = idTarefa;
 		this.idDevice = idDevice;
 		this.deadline = deadline;
-		this.baseTime = tempoBase;
-		this.computationalLoad = cargaComputacional;
-		this.dataEntrySize = tamanhoEntrada;
-		this.returnDataSize = tamanhoRetorno;
+		this.baseTime = baseTime;
+		this.computationalLoad = computationalLoad;
+		this.dataEntrySize = dataEntrySize;
+		this.returnDataSize = returnDataSize;
 		
 		this.energyExecution = 0;
 		this.energyTransfer = 0;
@@ -54,15 +51,15 @@ public class Task {
 	
 	
 	/* Getters */
-	public String getIdTarefa() {
+	public String getIdTask() {
 		return this.idTask;
 	}
 	
-	public String getIdDeviceGerador() {
+	public String getIdDeviceGenerator() {
 		return this.idDevice;
 	}
 	
-	public int getStatusTarefa() {
+	public int getTaskStatus() {
 		return this.taskStatus;
 	}
 	
@@ -70,106 +67,104 @@ public class Task {
 		return deadline;
 	}
 	
-	public long getTempoBase() {
+	public long getBaseTime() {
 		return baseTime;
 	}
 	
-	public long getCargaComputacional() {
+	public long getComputationalLoad() {
 		return computationalLoad;
 	}
 	
-	public long getTamanhoEntrada() {
+	public long getEntryDataSize() {
 		return dataEntrySize;
 	}
 
-	public long getTamanhoRetorno() {
+	public long getReturnDataSize() {
 		return returnDataSize;
 	}
 	
-	public int getPolitica() {
+	public int getPolicy() {
 		return policy;
 	}
 	
-	/* Retorna energia total consumida pela tarefa
+	/* Return total consumed energy for the task
 	 * 
 	 * */
-	public double getEnergiaTotalConsumida() {
+	public double getTotalConsumedEnergy() {
 		return this.energyExecution + this.energyTransfer;
 	}
 
-	public double getEnergiaExecucao() {
+	public double getExecutionEnergy() {
 		return energyExecution;
 	}
 	
-	public double getEnergiaTransmissaoDados() {
+	public double getTransferEnergy() {
 		return energyTransfer;
 	}
 	
 	
-	/* Retorna tempo total decorrido até finalização da tarefa
+	/* Return total elapsed time until task is finished
 	 * 
 	 * */
-	public long getTempoTotalDecorrido() {
+	public long getTotalElapsedTime() {
 		return this.timeExecution + this.timeTransfer;
 	}
 	
-	public long getTempoExecucao() {
+	public long getExecutionTime() {
 		return timeExecution;
 	}
 	
-	public long getTempoTransmissaoDados() {
+	public long getTransferTime() {
 		return timeTransfer;
 	}
 
 	
 	/* Setters */
-	public void setEnergiaExecucao(double energiaExecucao) {
-		this.energyExecution = energiaExecucao;
+	public void setExecutionEnergy(double executionEnergy) {
+		this.energyExecution = executionEnergy;
 	}
 
-	public void setEnergiaTransmissaoDados(double energiaTransmissaoDados) {
-		this.energyTransfer = energiaTransmissaoDados;
+	public void setTransferEnergy(double transferEnergy) {
+		this.energyTransfer = transferEnergy;
 	}
 	
-	/* Indica quanto tempo a tarefa necessita desde a criação até a finalização, para
-	 * a política de alocação selecionada. Considera o tempo de processamento + os tempos de
-	 * transmissão de dados
+	/* Indicates how much time the task needs from creation to conclusion for the
+	 * selected allocation policy. Considers the processing time plus the transfer
+	 * times.
 	 * */
-	public void setTempoExecucao(double tempoExecucao) {
-		this.timeExecution = (long) tempoExecucao;
+	public void setExecutionTime(double executionTime) {
+		this.timeExecution = (long) executionTime;
 	}
 	
-	public void setTempoTransmissaoDados(double tempoTransmissaoDados) {
-		this.timeTransfer = (long) tempoTransmissaoDados;
+	public void setTransferTime(double transferTime) {
+		this.timeTransfer = (long) transferTime;
 	}
 	
-	public void setPolitica(int politica) {
-		if(politica != POLICY1_IOT && politica != POLICY2_MEC && politica != POLICY3_CLOUD) {
-			System.out.println(this.getIdTarefa() + " - setPolitica() : política de alocação diferente de 1, 2 ou 3");
+	public void setPolicy(int policy) {
+		if(policy != POLICY1_IOT && policy != POLICY2_MEC && policy != POLICY3_CLOUD) {
+			System.out.println("Error - " + this.getIdTask() + " - setPolicy() : policy must be 1, 2 or 3");
 			System.exit(0);
 		}
 					
-		this.policy = politica;
+		this.policy = policy;
 	}
 	
 	
 	
-	
-	/* Verifica se tarefa deve ser finalizada
-	 * - Se o tempoBase (tempo de sistema no qual foi criado a tarefa) mais o tempo 
-	 * gasto nas transferências de dados e na execução forem iguais ao tempo atual do sistema,
-	 * então a tarefa deve finalizar. Caso contrário a tarefa não é finalizada.
+	/* Verify if task must finish
+	 * - If the base time + transfer time + execution time are equal to the system time,
+	 * then the task must finish. Otherwise the task keeps running.
 	 * 
 	 * */
-	public boolean verificaSeTarefaDeveFinalizar(long tempoSistema) {
+	public boolean verifyIfTaskMustFinish(long systemTime) {
 		if(this.taskStatus != TASK_ALIVE) {
-			System.out.println("ERRO - função verificaSeTarefaDeveFinalizar : " + this.idTask + " já está finalizada");
+			System.out.println("Error - verifyIfTaskMustFinish() : " + this.idTask + " is alterady finished");
 			System.exit(0);
 		}
 		
-		long tempoParaFinalizacao = this.baseTime + this.getTempoTotalDecorrido();
-		if(tempoParaFinalizacao == tempoSistema) {
-			this.finalizaTarefa(tempoSistema);
+		long timeToConclusion = this.baseTime + this.getTotalElapsedTime();
+		if(timeToConclusion == systemTime) {
+			this.finalizeTask(systemTime);
 			return Boolean.TRUE;
 		}
 		
@@ -177,13 +172,13 @@ public class Task {
 	}
 	
 	
-	/* Finaliza tarefa
+	/* Finalize task
 	 * 
 	 * */
-	private void finalizaTarefa(long tempoSistema) {
+	private void finalizeTask(long systemTime) {
 		if(this.deadline == -1)
 			this.taskStatus = TASK_CONCLUDED;
-		else if(tempoSistema < (this.baseTime + this.deadline))
+		else if(systemTime < (this.baseTime + this.deadline))
 			this.taskStatus = TASK_CONCLUDED;
 		else {
 			this.taskStatus = TASK_CALCELLED;
@@ -191,10 +186,10 @@ public class Task {
 	}
 	
 	
-	/* Verifica se a tarefa é crítica
+	/* Verify if task is critical
 	 * 
 	 * */
-	public boolean verificaSeTarefaCritica() {
+	public boolean verifyIfTaskIsCritical() {
 		if(this.deadline == -1)
 			return Boolean.FALSE;
 		else

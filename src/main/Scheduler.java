@@ -88,15 +88,15 @@ public class Scheduler {
 		this.coefficientTime = coefficientTime;
 		
 		// Calculate data transmission costs
-		this.energy5GUp = this.transmission5G.calculateConsumedEnergy(this.task.getTamanhoEntrada());
-		this.time5GUp = this.transmission5G.calculateTransferTime(this.task.getTamanhoEntrada());
-		this.energy5GDown = this.transmission5G.calculateConsumedEnergy(this.task.getTamanhoRetorno());
-		this.time5GDown = this.transmission5G.calculateTransferTime(this.task.getTamanhoRetorno());
+		this.energy5GUp = this.transmission5G.calculateConsumedEnergy(this.task.getEntryDataSize());
+		this.time5GUp = this.transmission5G.calculateTransferTime(this.task.getEntryDataSize());
+		this.energy5GDown = this.transmission5G.calculateConsumedEnergy(this.task.getReturnDataSize());
+		this.time5GDown = this.transmission5G.calculateTransferTime(this.task.getReturnDataSize());
 		
-		this.energyFiberUp = this.transmissionFiber.calculateEnergyConsumed(this.task.getTamanhoEntrada());
-		this.timeFiberUp = this.transmissionFiber.calculateTransmissionTime(this.task.getTamanhoEntrada());
-		this.energyFiberDown = this.transmissionFiber.calculateEnergyConsumed(this.task.getTamanhoRetorno());
-		this.timeFiberDown = this.transmissionFiber.calculateTransmissionTime(this.task.getTamanhoRetorno());
+		this.energyFiberUp = this.transmissionFiber.calculateEnergyConsumed(this.task.getEntryDataSize());
+		this.timeFiberUp = this.transmissionFiber.calculateTransmissionTime(this.task.getEntryDataSize());
+		this.energyFiberDown = this.transmissionFiber.calculateEnergyConsumed(this.task.getReturnDataSize());
+		this.timeFiberDown = this.transmissionFiber.calculateTransmissionTime(this.task.getReturnDataSize());
 		
 		// Calculate costs for each allocation policy
 		/* Alpha + Beta + Gamma must be equal to 1
@@ -117,9 +117,9 @@ public class Scheduler {
 				
 		for(Pair<Long, Double> pairFrequencyVoltage : pairsFrequencyVoltage) {
 			double executionTime = this.iotDevice.calculateExecutionTime(pairFrequencyVoltage.getValue0(), 
-					this.task.getCargaComputacional()); 
+					this.task.getComputationalLoad()); 
 			double dynamicEnergy = this.iotDevice.calculateDynamicEnergyConsumed(pairFrequencyVoltage.getValue0(),
-					pairFrequencyVoltage.getValue1(), this.task.getCargaComputacional());
+					pairFrequencyVoltage.getValue1(), this.task.getComputationalLoad());
 			double cost = (this.coefficientEnergy * dynamicEnergy + this.coefficientTime * executionTime) * alpha;
 			
 			this.costListIoTDevice.add(
@@ -141,9 +141,9 @@ public class Scheduler {
 		pairsFrequencyVoltage = this.serverMEC.getPairsFrenquecyVoltage();
 				
 		for(Pair<Long, Double> pairFrequencyVoltage : pairsFrequencyVoltage) {
-			double executionTime = this.serverMEC.calculateExecutionTime(pairFrequencyVoltage.getValue0(), this.task.getCargaComputacional()); 
+			double executionTime = this.serverMEC.calculateExecutionTime(pairFrequencyVoltage.getValue0(), this.task.getComputationalLoad()); 
 			double dynamicEnergy = this.serverMEC.calculateDynamicEnergyConsumed(pairFrequencyVoltage.getValue0(), 
-					pairFrequencyVoltage.getValue1(), this.task.getCargaComputacional());
+					pairFrequencyVoltage.getValue1(), this.task.getComputationalLoad());
 			double dynamicEnergyTotal = dynamicEnergy + this.energy5GUp + this.energy5GDown;
 			double executionTimeTotal = executionTime + this.time5GUp + this.energy5GDown;
 			
@@ -166,8 +166,8 @@ public class Scheduler {
 	private void calculateCostPolicyCloud(double gama) {
 		// Calculate cost for standard operating frequency
 		long standardFrequency = this.cloud.getStandarFrequency();
-		double standardTime = this.cloud.calculateExecutionTimeStardardFreq(this.task.getCargaComputacional());
-		double standardEnergy = this.cloud.calculateDynamicEnergyStandardFreq(this.task.getCargaComputacional());
+		double standardTime = this.cloud.calculateExecutionTimeStardardFreq(this.task.getComputationalLoad());
+		double standardEnergy = this.cloud.calculateDynamicEnergyStandardFreq(this.task.getComputationalLoad());
 		
 		double totalStandardEnergy = standardEnergy + this.energy5GUp + this.energyFiberUp + this.energyFiberDown + this.energy5GDown;
 		double totoalStandardTime = standardTime + this.time5GUp + this.timeFiberUp + this.timeFiberDown + this.time5GDown;		
@@ -182,8 +182,8 @@ public class Scheduler {
 		
 		// Calculate cost for turbo boost operating frequency
 		long turboFrequency = this.cloud.getTurboBoostFrequency();
-		double turboTime = this.cloud.calculaTempoExecucaoFreqTurboBoost(this.task.getCargaComputacional());
-		double turboEnergy = this.cloud.calculateDynamicEnergyTurboFreq(this.task.getCargaComputacional());
+		double turboTime = this.cloud.calculaTempoExecucaoFreqTurboBoost(this.task.getComputationalLoad());
+		double turboEnergy = this.cloud.calculateDynamicEnergyTurboFreq(this.task.getComputationalLoad());
 		
 		double totalTurboEnergy = turboEnergy + this.energy5GUp + this.energyFiberUp + this.energyFiberDown + this.energy5GDown;
 		double totalTurboTime = turboTime + this.time5GUp + this.timeFiberUp + this.timeFiberDown + this.time5GDown;
@@ -287,7 +287,7 @@ public class Scheduler {
 		System.out.println("-------------------------------------------------");			
 		if(this.task.getDeadline() != -1) {
 			// Task is critical
-			System.out.println(this.task.getIdTarefa() + " is critical.");
+			System.out.println(this.task.getIdTask() + " is critical.");
 			System.out.println("Cost;CPU core Energy;Transfer Energy;CPU core Time;Diff Time;Transfer Time;Frequency;Voltage;Policy");
 			
 			for(Octet<Double, Double, Double, Double, Double, Long, Double, Integer> octet : octetList) {
@@ -301,7 +301,7 @@ public class Scheduler {
 		}
 		else {
 			// Task is non-critical (normal)
-			System.out.println(this.task.getIdTarefa() + " is non-critical (normal).");
+			System.out.println(this.task.getIdTask() + " is non-critical (normal).");
 			System.out.println("Cost;CPU core Energy;Transfer Energy;CPU core Time;Transfer Time;Frequency;Voltage;Policy");
 			
 			for(Octet<Double, Double, Double, Double, Double, Long, Double, Integer> octet : octetList) {				
@@ -327,8 +327,8 @@ public class Scheduler {
 		System.out.println("Energy coefficient: " + this.coefficientEnergy);
 		System.out.println("Time coefficient: " + this.coefficientTime);
 		System.out.println("-------------------------------------------------");
-		System.out.println("Data Entry Size: " + this.task.getTamanhoEntrada() + " bits");
-		System.out.println("Result Data Size: " + this.task.getTamanhoRetorno() + " bits");
+		System.out.println("Data Entry Size: " + this.task.getEntryDataSize() + " bits");
+		System.out.println("Result Data Size: " + this.task.getReturnDataSize() + " bits");
 		System.out.println("-------------------------------------------------");
 		System.out.println("5G Energy Up: " + this.energy5GUp + " W");
 		System.out.println("5G Time Up: " + this.time5GUp + " s");
