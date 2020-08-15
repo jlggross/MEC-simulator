@@ -141,7 +141,12 @@ To read this file you can use Microsoft Excel's import data from file feature. J
 ![Data tab in Excel](images/excel-dataTab.png)
 
 # 7 More info
-If you want more detailed information about the cost model, simulator, experiments and results, please check the article inside the **misc** folder of this project (article-workinprogress.pdf).
+If you want more detailed information about the cost model, simulator, experiments and results, please check the articles inside the **misc** folder of this project. We have four articles so far:
+
+* 2020-02-28 - Artigo ISCC 2020.pdf
+* 2020-06-10 - Artigo - ICSOC 2020.pdf
+* 2020-06-13 - Artigo SBCUP - Versão final.pdf
+* 2020-08-14 - Artigo - ICSOC 2020 (Short Paper).pdf
 
 ## 7.1 Dependencies
 This project uses javatuples-1.2.jar. This library is included in the "libraries" folder.
